@@ -1,0 +1,20 @@
+{
+  "name": "sales-sandbox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Тестовый отдел продаж — интерактивная песочница ИИ-автоматизации (Dasha + CRM-макет)",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=backend & npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+    "start": "npm run start --workspace=backend"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

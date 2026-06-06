@@ -1,0 +1,67 @@
+# CLAUDE.md — память проекта «Тестовый отдел продаж»
+
+Контекст для будущих сессий. Подробная архитектура — в [ARCHITECTURE.md](./ARCHITECTURE.md),
+сетап Dasha — в [dasha-setup/SETUP.md](./dasha-setup/SETUP.md).
+
+## Что это
+Интерактивная песочница ИИ-автоматизации продаж: посетитель общается голосом/текстом с
+ИИ-менеджером (Dasha) и в реальном времени видит, как разговор заносится в макет CRM,
+формируется авто-саммари, считается экономика (ROI). Двойная роль: лидген на сайте +
+демо-инструмент на встречах. Продающий актив для всех сделок по ИИ-автоматизации.
+
+## Запуск
+```bash
+npm install
+npm run dev:backend     # :8080
+npm run dev:frontend    # :5173
+# Открывать: http://localhost:5173/?presenter=change-me  (презентер = без гейта/лимитов)
+```
+Без `DASHA_API_KEY` фронт работает в режиме **simulator** (скриптованный диалог из
+`frontend/src/config/niches.ts`). Конфиг — `backend/.env` (см. `backend/.env.example`).
+
+## Стек и структура
+- `frontend/` — React+TS+Vite+Tailwind+Zustand. Весь демо-цикл во фронте.
+- `backend/` — Fastify+TS. Минт токенов Dasha (держит API-ключ), лимиты/антиспам,
+  лид→Supabase, раздача статики. Грузит `.env` через `process.loadEnvFile()`.
+- `dasha-setup/` — артефакты для настройки агента Dasha (промпты, tools.json, зонд, SETUP).
+
+## Главный принцип
+Dasha ведёт разговор. «Магию» (заполнение карточки, саммари, скоринг, SMS, перезвон, ROI)
+рисует **браузер** через **client-side tools** поверх websocket Dasha — без бэкенд-хопа.
+
+## Dasha BlackBox — подтверждённый протокол (проверено живьём)
+- WS: `wss://blackbox.dasha.ai/api/v1/ws/webCall?token={integration_token}`.
+  (dev-эндпоинт `ws/dev?authorization=` НЕ работает — давал 1006.)
+- `initialize`: `{type:'initialize', timestamp, request:{callType:'chat'|'webCall', additionalData:{sessionId,niche,mode}}}`.
+  **callType выбирается на фронте по виджету** (голос→webCall, текст→chat), см. `useSandbox.ts`.
+- Текст: `incomingChatMessage.content` — **строка** (не объект, иначе close 1007).
+- Реплики приходят `type:'text'`, `content={source:'assistant'|'user', text, ...}`. Рендерим только `assistant`. В голосе транскрипт не показываем.
+- Tools: сервер шлёт `websocketToolRequest {content:{id,toolName,args}}` → фронт исполняет → `websocketToolResponse`.
+  **Ответ ОБЯЗАН содержать `channelId` (nullable → слать `null`)** + `content:{id,result}`, иначе 1007.
+- Client-side tools включаются списком **имён в поле `tools` web-интеграции** (`WebIntegrationRequestDto.tools`). Пусто → все server-side (LlmTool.webhook, HTTP).
+- Голос (WebRTC): offer приходит в `sdpInvite.data.invite` (сырой SDP, SIP/pjmedia, профиль RTP/SAVP, G.711 — Chrome принимает). Answer слать `{type:'sdpAnswer', channelId:null, data:{sdpAnswer:<sdp>}}`. Offer без trickle → дождаться `icegatheringstate==='complete'` (см. `DashaClient.waitIceGathering`). В конце звонка ws закрывается 1006 — безвредно.
+- `conversationResult` от сервера = авто-саммари.
+- REST-авторизация: `Authorization: Bearer <key>`. Токен: `POST /api/v1/web-integrations/{id}/tokens {name УНИКАЛЬНО!}` → `{token}` (дубль name → 409).
+- Длительность звонков: `POST /api/v1/callresults/search` → поле `durationSeconds` (точный замер для биллинга/ROI). Биллинг/тариф API НЕ отдаёт — тариф из дашборда Dasha.
+
+## Контракт client-side tools (зеркало `frontend/src/dasha/tools.ts` ↔ `store.applyTool`)
+`update_card{field,value}` · `set_summary{text}` · `lead_score{score,sentiment}` ·
+`show_sms{text,link}` · `request_callback{delaySeconds,reason}` · `transfer{reason}`.
+
+## Ниши
+`salon` (дефолт, ЖИВОЙ Dasha) · `dental` · `auto` · `meat` (пока simulator).
+Каждая = свой набор полей карточки, ROI-параметры, скриптованный сценарий.
+
+## Ресурсы Dasha (на аккаунте клиента; API-ключ только в backend/.env, НЕ в репозитории)
+- salon-агент: `9839c486-f904-4db4-9d66-228964d76580` (ru-RU, голос ElevenLabs, LLM gpt-4.1-mini, наш промпт + 6 tools)
+- web-integration: `12acd268-078f-49e7-9227-954a63451bda` (tools=6 имён, features WebCall/WebChat/CallResult/ToolCallLogs)
+- orgId: `133a8968-e176-4810-9d2e-f6cf0fe8f98d`. Дефолтный онбординг-агент `5041527b…` НЕ трогаем.
+
+## Статус
+Салон работает end-to-end (голос+чат+tools+CRM+ROI+SMS+перезвон), проверено вживую.
+Дальше: создать агентов dental/auto/meat по образцу салона; деплой на `demo.flowsmart.ru`
+(pm2 + Caddy на Hostkey 194.34.239.230); публичный режим + Supabase для лидов.
+
+## Гочи
+- Запуск нового разговора глушит предыдущий (без двойных звонков); перезвон всплывает только после завершения текущего звонка.
+- Презентер-режим: `?presenter=<PRESENTER_KEY>` — снимает гейт и лимиты.

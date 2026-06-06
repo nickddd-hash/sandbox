@@ -1,0 +1,82 @@
+{
+  "_comment": "Client-side (websocket) tools песочницы. Регистрируются в агенте Dasha как инструменты, исполняемые на стороне клиента. Имена и параметры зеркалят frontend/src/dasha/tools.ts и store.applyTool. Исполнение — в браузере: сервер шлёт websocketToolRequest, фронт обновляет CRM и отвечает websocketToolResponse.",
+  "tools": [
+    {
+      "name": "update_card",
+      "description": "Заполнить или обновить одно поле карточки клиента в CRM. Вызывай СРАЗУ, как только узнал значение (имя, телефон, услугу, дату и т.д.). Одно поле за вызов.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Ключ поля: name, phone, service, date, doctor, master, car, company, product, volume."
+          },
+          "value": { "type": "string", "description": "Значение поля одной строкой." }
+        },
+        "required": ["field", "value"]
+      }
+    },
+    {
+      "name": "set_summary",
+      "description": "Записать краткое резюме разговора в карточку. Вызывай один раз в конце: что хотел клиент, к чему пришли, что отправлено.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Резюме 1–2 предложения." }
+        },
+        "required": ["text"]
+      }
+    },
+    {
+      "name": "lead_score",
+      "description": "Оценить лид и тональность разговора. Вызывай ближе к концу, когда понятен интерес.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "score": { "type": "integer", "minimum": 0, "maximum": 100, "description": "Оценка интереса 0–100." },
+          "sentiment": {
+            "type": "string",
+            "enum": ["горячий", "позитивный", "нейтральный", "холодный"],
+            "description": "Тональность."
+          }
+        },
+        "required": ["score", "sentiment"]
+      }
+    },
+    {
+      "name": "show_sms",
+      "description": "Отправить клиенту SMS со ссылкой (подтверждение записи, КП, бронь). Перед вызовом скажи вслух, что отправляешь SMS.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string", "description": "Текст SMS." },
+          "link": { "type": "string", "description": "Ссылка (на свой домен)." }
+        },
+        "required": ["text", "link"]
+      }
+    },
+    {
+      "name": "request_callback",
+      "description": "Запланировать обратный звонок клиенту (напоминание о визите, дожим). Вызывай, если уместно перезвонить позже.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "delaySeconds": { "type": "integer", "description": "Через сколько секунд перезвонить (в демо — 10)." },
+          "reason": { "type": "string", "description": "Повод звонка." }
+        },
+        "required": ["delaySeconds", "reason"]
+      }
+    },
+    {
+      "name": "transfer",
+      "description": "Перевести разговор на живого оператора/менеджера. Вызывай для сложных/горячих случаев или по просьбе клиента.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": { "type": "string", "description": "Причина перевода." }
+        },
+        "required": ["reason"]
+      }
+    }
+  ]
+}
