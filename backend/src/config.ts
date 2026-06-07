@@ -33,6 +33,7 @@ export const config = {
       auto: str('DASHA_INTEGRATION_AUTO'),
       meat: str('DASHA_INTEGRATION_MEAT'),
       salon: str('DASHA_INTEGRATION_SALON'),
+      food: str('DASHA_INTEGRATION_FOOD'),
     } as Record<string, string>,
   },
 

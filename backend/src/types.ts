@@ -1,5 +1,5 @@
-export type Niche = 'dental' | 'auto' | 'meat' | 'salon';
-export const NICHES: Niche[] = ['dental', 'auto', 'meat', 'salon'];
+export type Niche = 'dental' | 'auto' | 'meat' | 'salon' | 'food';
+export const NICHES: Niche[] = ['dental', 'auto', 'meat', 'salon', 'food'];
 
 export function isNiche(v: unknown): v is Niche {
   return typeof v === 'string' && (NICHES as string[]).includes(v);

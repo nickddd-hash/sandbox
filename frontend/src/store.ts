@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import type { NicheConfig, SessionMode, ToolEvent, Transport } from './types';
 import { DEFAULT_NICHE, NICHES } from './config/niches';
-import { perCall } from './roi';
 
 export type ConnStatus = 'idle' | 'ringing' | 'connecting' | 'live' | 'ended' | 'error';
 export type Channel = 'voice' | 'chat';
@@ -35,6 +34,33 @@ export interface PendingCallback {
   fireAt: number;
 }
 
+export interface Appointment {
+  id: string;
+  day: string; // как назвал агент: «четверг» | «чт» | «сегодня» | «завтра» | дата
+  time: string; // «18:00»
+  service: string;
+  client?: string;
+  master?: string;
+  at: number; // для анимации появления
+}
+
+export interface OrderItem {
+  id: string;
+  name: string;
+  price: number;
+  qty: number;
+  at: number;
+}
+
+// Запись истории заказов (для карточки клиента / бонусной программы).
+export interface OrderRecord {
+  id: string;
+  placedAt: number;
+  items: { name: string; qty: number; price: number }[];
+  total: number;
+  deliveryTime?: string;
+}
+
 interface State {
   niche: NicheConfig;
   mode: SessionMode;
@@ -55,11 +81,13 @@ interface State {
   sms: SmsState | null;
   transferReason: string | null;
   pendingCallback: PendingCallback | null;
+  appointments: Appointment[];
+  order: OrderItem[];
+  orderHistory: OrderRecord[];
+  bonusPoints: number;
 
   toolLog: ToolLogEntry[];
   showBehindScenes: boolean;
-
-  savedTotal: number; // накопленная экономия за сессию, ₽
 
   // actions
   setNiche: (id: string) => void;
@@ -99,11 +127,13 @@ export const useStore = create<State>((set, get) => ({
   sms: null,
   transferReason: null,
   pendingCallback: null,
+  appointments: [],
+  order: [],
+  orderHistory: [],
+  bonusPoints: 0,
 
   toolLog: [],
   showBehindScenes: false,
-
-  savedTotal: 0,
 
   setNiche: (id) => {
     const niche = NICHES[id] ?? DEFAULT_NICHE;
@@ -118,9 +148,12 @@ export const useStore = create<State>((set, get) => ({
       sms: null,
       transferReason: null,
       pendingCallback: null,
+      appointments: [],
+      order: [],
+      orderHistory: [],
+      bonusPoints: 0,
       toolLog: [],
       status: 'idle',
-      savedTotal: 0,
     });
   },
 
@@ -147,9 +180,16 @@ export const useStore = create<State>((set, get) => ({
   setStatus: (status) => set({ status }),
 
   addMessage: (m) =>
-    set((s) => ({
-      messages: [...s.messages, { ...m, id: crypto.randomUUID() }],
-    })),
+    set((s) => {
+      // Агент шлёт каждую фразу отдельным сообщением (для TTS). В чате склеиваем
+      // подряд идущие реплики ассистента в один пузырь, чтобы не было «рваного» вида.
+      const last = s.messages[s.messages.length - 1];
+      if (m.from === 'agent' && last && last.from === 'agent') {
+        const merged = { ...last, text: `${last.text} ${m.text}`.trim() };
+        return { messages: [...s.messages.slice(0, -1), merged] };
+      }
+      return { messages: [...s.messages, { ...m, id: crypto.randomUUID() }] };
+    }),
 
   applyTool: (e) => {
     const now = Date.now();
@@ -195,6 +235,71 @@ export const useStore = create<State>((set, get) => ({
         set({ transferReason: String(e.args.reason ?? 'Перевод на оператора') });
         return;
       }
+      case 'book_appointment': {
+        const appt: Appointment = {
+          id: e.id,
+          day: String(e.args.day ?? ''),
+          time: String(e.args.time ?? ''),
+          service: String(e.args.service ?? ''),
+          client: e.args.client != null ? String(e.args.client) : undefined,
+          master: e.args.master != null ? String(e.args.master) : undefined,
+          at: now,
+        };
+        set((s) => {
+          // Защита от дублей: агент иногда вызывает tool повторно.
+          const dup = s.appointments.some(
+            (x) =>
+              x.day === appt.day &&
+              x.time === appt.time &&
+              x.service === appt.service &&
+              (x.client ?? '') === (appt.client ?? ''),
+          );
+          if (dup) return {};
+          // Синхронизируем карточку: «Запись» (и мастер) заполняются из брони.
+          const card: Record<string, CardField> = {
+            ...s.card,
+            date: { value: `${appt.day} ${appt.time}`.trim(), updatedAt: now },
+          };
+          if (appt.master) card.master = { value: appt.master, updatedAt: now };
+          return { appointments: [...s.appointments, appt], card };
+        });
+        return;
+      }
+      case 'add_order_item': {
+        const item: OrderItem = {
+          id: e.id,
+          name: String(e.args.name ?? ''),
+          price: Number(e.args.price) || 0,
+          qty: Number(e.args.qty) || 1,
+          at: now,
+        };
+        set((s) => {
+          // Защита от дублей повторного вызова tool по одной позиции.
+          if (s.order.some((x) => x.name === item.name && x.price === item.price)) return {};
+          return { order: [...s.order, item] };
+        });
+        return;
+      }
+      case 'place_order': {
+        set((s) => {
+          if (s.order.length === 0) return {};
+          const total = s.order.reduce((sum, it) => sum + it.price * it.qty, 0);
+          const record: OrderRecord = {
+            id: e.id,
+            placedAt: now,
+            items: s.order.map((it) => ({ name: it.name, qty: it.qty, price: it.price })),
+            total,
+            deliveryTime: e.args.deliveryTime != null ? String(e.args.deliveryTime) : undefined,
+          };
+          // Бонусная программа: 5% кэшбэк баллами.
+          const bonus = Math.round(total * 0.05);
+          return {
+            orderHistory: [...s.orderHistory, record],
+            bonusPoints: s.bonusPoints + bonus,
+          };
+        });
+        return;
+      }
       default:
         // неизвестный tool — только в логе «под капотом»
         return;
@@ -215,17 +320,13 @@ export const useStore = create<State>((set, get) => ({
       sms: null,
       transferReason: null,
       pendingCallback: null,
+      appointments: [],
+      order: [],
+      orderHistory: [],
+      bonusPoints: 0,
       toolLog: [],
       status: 'idle',
-      savedTotal: 0,
     });
   },
 }));
 
-// Накопление экономии: на каждый завершённый разговор (status -> ended) добавляем savedPerCall.
-useStore.subscribe((state, prev) => {
-  if (state.status === 'ended' && prev.status !== 'ended') {
-    const saved = perCall(state.niche.roi).savedPerCall;
-    useStore.setState((s) => ({ savedTotal: s.savedTotal + saved }));
-  }
-});

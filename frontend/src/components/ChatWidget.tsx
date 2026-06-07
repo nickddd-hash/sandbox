@@ -13,13 +13,15 @@ export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
   const channel = useStore((s) => s.channel);
   const messages = useStore((s) => s.messages);
   const [draft, setDraft] = useState('');
-  const endRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const active = (status === 'connecting' || status === 'live') && channel === 'chat';
 
+  // Прокручиваем ТОЛЬКО внутренний контейнер чата, а не всю страницу.
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
 
   const submit = () => {
     const text = draft.trim();
@@ -39,7 +41,10 @@ export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
         )}
       </div>
 
-      <div className="flex-1 min-h-[160px] max-h-[260px] overflow-y-auto space-y-2 pr-1">
+      <div
+        ref={listRef}
+        className="flex-1 min-h-[160px] max-h-[260px] overflow-y-auto space-y-2 pr-1"
+      >
         {messages.length === 0 && (
           <p className="text-slate-600 text-sm">История появится здесь…</p>
         )}
@@ -55,7 +60,6 @@ export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
             {m.text}
           </div>
         ))}
-        <div ref={endRef} />
       </div>
 
       <div className="mt-3 flex gap-2">

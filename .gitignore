@@ -7,3 +7,4 @@ build/
 .DS_Store
 frontend/dist/
 backend/dist/
+*.tsbuildinfo

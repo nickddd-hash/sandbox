@@ -1,4 +1,7 @@
-export type Niche = 'dental' | 'auto' | 'meat' | 'salon';
+export type Niche = 'dental' | 'auto' | 'meat' | 'salon' | 'food';
+
+// Вид CRM-витрины: календарь записей (услуги) или корзина заказа (еда).
+export type CrmView = 'calendar' | 'order';
 
 export type SessionMode = 'public' | 'presenter';
 export type Transport = 'dasha' | 'simulator';
@@ -47,6 +50,7 @@ export interface NicheConfig {
   agentName: string;
   fields: FieldDef[];
   roi: RoiParams;
+  crmView: CrmView; // 'calendar' для услуг, 'order' для еды
   script: ScriptStep[];
 }
 

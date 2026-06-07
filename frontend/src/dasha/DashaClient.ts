@@ -87,9 +87,11 @@ export class DashaClient implements Conversation {
         const c = msg.content;
         // Реальный формат: content = { source: 'assistant'|'user', text, ... }.
         // Показываем только реплики ассистента; пользовательские эхо добавляем локально.
-        const text = typeof c === 'string' ? c : c?.text;
-        if (text && (c?.source ?? 'assistant') === 'assistant') {
-          store.addMessage({ from: 'agent', text });
+        const raw = typeof c === 'string' ? c : c?.text;
+        if (raw && (c?.source ?? 'assistant') === 'assistant') {
+          // Убираем английские слова-паузы (um/uh) — звучат фальшиво. Русские слова не трогаем.
+          const text = raw.replace(/\b(?:um+|uh+)\b/gi, '').replace(/\s{2,}/g, ' ').trim();
+          if (text) store.addMessage({ from: 'agent', text });
         }
         break;
       }

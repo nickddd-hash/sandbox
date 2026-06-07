@@ -22,6 +22,7 @@ const dental: NicheConfig = {
     defaultCallsPerDay: 40,
     defaultManagerSalary: 60000,
   },
+  crmView: 'calendar',
   script: [
     { at: 600, say: { from: 'agent', text: 'Стоматология «Денталюкс», меня зовут Анна. Чем могу помочь?' } },
     { at: 2200, say: { from: 'user', text: 'Здравствуйте, хочу записаться на чистку зубов.' } },
@@ -36,6 +37,7 @@ const dental: NicheConfig = {
     { at: 10200, tool: { name: 'update_card', args: { field: 'doctor', value: 'Гигиенист Петрова' } } },
     { at: 10600, say: { from: 'agent', text: 'Есть суббота в 14:30 у гигиениста Петровой. Записываю?' } },
     { at: 12000, say: { from: 'user', text: 'Да, давайте.' } },
+    { at: 12300, tool: { name: 'book_appointment', args: { day: 'суббота', time: '14:30', service: 'Профгигиена (чистка)', client: 'Игорь', master: 'Гигиенист Петрова' } } },
     { at: 12600, tool: { name: 'lead_score', args: { score: 85, sentiment: 'позитивный' } } },
     { at: 13200, tool: { name: 'show_sms', args: { text: 'Вы записаны: Сб 14:30. Подтвердите визит:', link: 'денталюкс.рф/visit/8421' } } },
     { at: 14200, tool: { name: 'set_summary', args: { text: 'Игорь записан на профгигиену в субботу 14:30 к гигиенисту Петровой. Отправлено SMS с подтверждением.' } } },
@@ -63,6 +65,7 @@ const auto: NicheConfig = {
     defaultCallsPerDay: 35,
     defaultManagerSalary: 65000,
   },
+  crmView: 'calendar',
   script: [
     { at: 600, say: { from: 'agent', text: 'Автосервис «ТочкаОпоры», Сергей. Слушаю вас.' } },
     { at: 2200, say: { from: 'user', text: 'Нужно записаться на замену масла, машина Киа Рио.' } },
@@ -75,6 +78,7 @@ const auto: NicheConfig = {
     { at: 8200, tool: { name: 'update_card', args: { field: 'date', value: 'Завтра, 11:00' } } },
     { at: 8700, say: { from: 'agent', text: 'Есть завтра в 11:00. Подходит?' } },
     { at: 10000, say: { from: 'user', text: 'Да, отлично.' } },
+    { at: 10300, tool: { name: 'book_appointment', args: { day: 'завтра', time: '11:00', service: 'Замена масла + фильтр', client: 'Дмитрий' } } },
     { at: 10600, tool: { name: 'lead_score', args: { score: 78, sentiment: 'позитивный' } } },
     { at: 11200, tool: { name: 'show_sms', args: { text: 'Запись на замену масла завтра 11:00. Адрес и детали:', link: 'точкаопоры.рф/z/3391' } } },
     { at: 12200, tool: { name: 'set_summary', args: { text: 'Дмитрий, Kia Rio — замена масла и фильтра, запись на завтра 11:00. Отправлено SMS с адресом.' } } },
@@ -101,6 +105,7 @@ const meat: NicheConfig = {
     defaultCallsPerDay: 25,
     defaultManagerSalary: 80000,
   },
+  crmView: 'calendar',
   script: [
     { at: 600, say: { from: 'agent', text: 'Мясокомбинат «Сибагро», отдел продаж, Ольга. Здравствуйте!' } },
     { at: 2400, say: { from: 'user', text: 'Здравствуйте, интересует оптом говяжья вырезка.' } },
@@ -140,6 +145,7 @@ const salon: NicheConfig = {
     defaultCallsPerDay: 50,
     defaultManagerSalary: 50000,
   },
+  crmView: 'calendar',
   script: [
     { at: 600, say: { from: 'agent', text: 'Салон «Шарм», администратор Карина. Здравствуйте!' } },
     { at: 2200, say: { from: 'user', text: 'Хочу записаться на стрижку и окрашивание.' } },
@@ -152,6 +158,7 @@ const salon: NicheConfig = {
     { at: 8400, tool: { name: 'update_card', args: { field: 'date', value: 'Чт, 18:00' } } },
     { at: 8900, say: { from: 'agent', text: 'Есть четверг в 18:00 у стилиста Юлии. Записываю?' } },
     { at: 10200, say: { from: 'user', text: 'Да!' } },
+    { at: 10500, tool: { name: 'book_appointment', args: { day: 'четверг', time: '18:00', service: 'Стрижка + окрашивание', client: 'Марина', master: 'Стилист Юлия' } } },
     { at: 10800, tool: { name: 'lead_score', args: { score: 80, sentiment: 'позитивный' } } },
     { at: 11400, tool: { name: 'show_sms', args: { text: 'Запись: Чт 18:00, стилист Юлия. Перенести/отменить:', link: 'шарм.рф/v/5563' } } },
     { at: 12400, tool: { name: 'set_summary', args: { text: 'Марина — стрижка и окрашивание, четверг 18:00, стилист Юлия. Отправлено SMS с записью.' } } },
@@ -159,7 +166,54 @@ const salon: NicheConfig = {
   ],
 };
 
-export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon };
+const food: NicheConfig = {
+  id: 'food',
+  label: 'Доставка еды',
+  emoji: '🍕',
+  agentName: 'Алексей, оператор доставки',
+  fields: [
+    { key: 'name', label: 'Имя' },
+    { key: 'phone', label: 'Телефон' },
+    { key: 'address', label: 'Адрес' },
+    { key: 'payment', label: 'Оплата' },
+  ],
+  roi: {
+    aiCostPerCall: 4,
+    humanCostPerCall: 45,
+    missedCallValue: 1200, // упущенный заказ
+    defaultCallsPerDay: 80,
+    defaultManagerSalary: 55000,
+  },
+  crmView: 'order',
+  script: [
+    { at: 600, say: { from: 'agent', text: 'Кафе-доставка «Вкусно Экспресс», Алексей. Что желаете заказать?' } },
+    { at: 2400, say: { from: 'user', text: 'Пиццу пепперони и ролл Филадельфия.' } },
+    { at: 3000, tool: { name: 'add_order_item', args: { name: 'Пицца Пепперони 40см', price: 790, qty: 1 } } },
+    { at: 3500, tool: { name: 'add_order_item', args: { name: 'Ролл Филадельфия', price: 540, qty: 1 } } },
+    { at: 4200, say: { from: 'agent', text: 'Добавил. Из напитков что-нибудь?' } },
+    { at: 5400, say: { from: 'user', text: 'Колу 0.5.' } },
+    { at: 5800, tool: { name: 'add_order_item', args: { name: 'Кола 0.5', price: 120, qty: 1 } } },
+    { at: 6400, say: { from: 'agent', text: 'Куда доставить?' } },
+    { at: 7600, say: { from: 'user', text: 'Улица Ленина 10, квартира 5.' } },
+    { at: 8000, tool: { name: 'update_card', args: { field: 'address', value: 'ул. Ленина 10, кв. 5' } } },
+    { at: 8500, say: { from: 'agent', text: 'Как вас зовут и номер телефона?' } },
+    { at: 9800, say: { from: 'user', text: 'Дмитрий, 8 900 111 22 33.' } },
+    { at: 10200, tool: { name: 'update_card', args: { field: 'name', value: 'Дмитрий' } } },
+    { at: 10500, tool: { name: 'update_card', args: { field: 'phone', value: '8 900 111 22 33' } } },
+    { at: 11000, say: { from: 'agent', text: 'Оплата наличными курьеру или картой онлайн?' } },
+    { at: 12200, say: { from: 'user', text: 'Картой онлайн.' } },
+    { at: 12500, tool: { name: 'update_card', args: { field: 'payment', value: 'Онлайн (безнал)' } } },
+    { at: 13000, say: { from: 'agent', text: 'Секунду, считаю сумму…' } },
+    { at: 14000, tool: { name: 'place_order', args: { deliveryTime: '~60 минут' } } },
+    { at: 14500, say: { from: 'agent', text: 'Итого 1450 рублей, доставка бесплатно. Отправляю ссылку на оплату в SMS.' } },
+    { at: 15000, tool: { name: 'show_sms', args: { text: 'Оплата заказа «Вкусно Экспресс» на 1450 ₽:', link: 'вкусно-экспресс.рф/pay/8842' } } },
+    { at: 15800, tool: { name: 'lead_score', args: { score: 88, sentiment: 'позитивный' } } },
+    { at: 16400, tool: { name: 'set_summary', args: { text: 'Дмитрий, ул. Ленина 10-5. Заказ: пицца Пепперони, ролл Филадельфия, кола — 1450 ₽, оплата онлайн. Отправлена ссылка на оплату.' } } },
+    { at: 17000, say: { from: 'agent', text: 'Заказ принят, ждите курьера примерно через час. Приятного аппетита!' } },
+  ],
+};
+
+export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food };
 // Салон — первый в списке и дефолтный: с него стартуем живое подключение Dasha.
-export const NICHE_LIST: NicheConfig[] = [salon, dental, auto, meat];
+export const NICHE_LIST: NicheConfig[] = [salon, food, dental, auto, meat];
 export const DEFAULT_NICHE: NicheConfig = salon;

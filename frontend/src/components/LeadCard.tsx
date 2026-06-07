@@ -13,6 +13,10 @@ export function LeadCard() {
   const summary = useStore((s) => s.summary);
   const score = useStore((s) => s.score);
   const sentiment = useStore((s) => s.sentiment);
+  const crmView = useStore((s) => s.niche.crmView);
+  const booked = useStore((s) =>
+    s.niche.crmView === 'order' ? s.orderHistory.length > 0 : s.appointments.length > 0,
+  );
 
   const filled = Object.keys(card).length > 0;
 
@@ -20,11 +24,18 @@ export function LeadCard() {
     <div className="rounded-xl border border-slate-700 bg-panel/60 p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm uppercase tracking-wide text-slate-400">Карточка лида</h3>
-        {score != null && (
-          <span className={`text-xs px-2 py-1 rounded-full border ${scoreColor(score)}`}>
-            Скоринг {score}{sentiment ? ` · ${sentiment}` : ''}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {booked && (
+            <span className="text-xs px-2 py-1 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+              {crmView === 'order' ? '✓ Заказ оформлен' : '✓ Записан'}
+            </span>
+          )}
+          {score != null && (
+            <span className={`text-xs px-2 py-1 rounded-full border ${scoreColor(score)}`}>
+              Скоринг {score}{sentiment ? ` · ${sentiment}` : ''}
+            </span>
+          )}
+        </div>
       </div>
 
       <dl className="space-y-2">

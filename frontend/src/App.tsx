@@ -2,6 +2,8 @@ import { useStore } from './store';
 import { useSandbox } from './useSandbox';
 import { NicheSwitcher } from './components/NicheSwitcher';
 import { CrmBoard } from './components/CrmBoard';
+import { Calendar } from './components/Calendar';
+import { OrderBoard } from './components/OrderBoard';
 import { VoiceWidget } from './components/VoiceWidget';
 import { ChatWidget } from './components/ChatWidget';
 import { RoiPanel } from './components/RoiPanel';
@@ -13,6 +15,7 @@ export default function App() {
   const { launch, stop, sendText } = useSandbox();
   const transport = useStore((s) => s.transport);
   const mode = useStore((s) => s.mode);
+  const crmView = useStore((s) => s.niche.crmView);
   const toggleBehind = useStore((s) => s.toggleBehindScenes);
   const submitContact = useStore((s) => s.submitContact);
 
@@ -57,6 +60,10 @@ export default function App() {
           <RoiPanel />
         </div>
       </main>
+
+      <div className="max-w-6xl mx-auto px-4 pb-8">
+        {crmView === 'order' ? <OrderBoard /> : <Calendar />}
+      </div>
 
       <ContactGate onConfirm={confirmContact} />
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
