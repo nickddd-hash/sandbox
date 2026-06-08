@@ -10,6 +10,7 @@ import { RoiPanel } from './components/RoiPanel';
 import { ContactGate } from './components/ContactGate';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
+import { CallbackWidget } from './components/CallbackWidget';
 
 export default function App() {
   const { launch, stop, sendText } = useSandbox();
@@ -57,6 +58,7 @@ export default function App() {
         <div className="flex flex-col gap-4">
           <VoiceWidget onLaunch={() => void launch('voice')} onStop={stop} />
           <ChatWidget onLaunch={() => void launch('chat')} onSend={sendText} onStop={stop} />
+          <CallbackWidget />
           <RoiPanel />
         </div>
       </main>

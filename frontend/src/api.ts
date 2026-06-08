@@ -16,6 +16,19 @@ export async function startSession(
   return res.json();
 }
 
+export async function startCallback(phone: string, niche: string): Promise<{ sessionId: string }> {
+  const res = await fetch('/api/callback', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ phone, niche }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { error?: string }).error ?? `callback_${res.status}`);
+  }
+  return res.json();
+}
+
 export async function postLead(payload: {
   sessionId: string;
   niche: Niche;

@@ -37,6 +37,14 @@ export const config = {
     } as Record<string, string>,
   },
 
+  voximplant: {
+    accountId: str('VOXIMPLANT_ACCOUNT_ID'),
+    apiKey: str('VOXIMPLANT_API_KEY'),
+    applicationId: str('VOXIMPLANT_APPLICATION_ID', '56201783'),
+    callerId: str('VOXIMPLANT_CALLERID'),
+    scenarioName: str('VOXIMPLANT_SCENARIO_NAME', 'dasha-bridge-test'),
+  },
+
   limits: {
     sessionMinuteCap: num('SESSION_MINUTE_CAP', 3),
     ipMaxSessions: num('IP_MAX_SESSIONS', 5),
@@ -53,6 +61,10 @@ export const config = {
 
 // Включён ли реальный Dasha. Без ключа отдаём simulator-режим.
 export const dashaEnabled = (): boolean => Boolean(config.dasha.apiKey);
+
+// Настроен ли Voximplant для телефонных callback-звонков.
+export const voxEnabled = (): boolean =>
+  Boolean(config.voximplant.accountId && config.voximplant.apiKey);
 
 // Настроен ли Supabase для записи лидов.
 export const supabaseEnabled = (): boolean =>

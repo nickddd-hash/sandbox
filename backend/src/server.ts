@@ -3,6 +3,8 @@ import cors from '@fastify/cors';
 import { config, dashaEnabled, supabaseEnabled } from './config.js';
 import { sessionRoutes } from './routes/session.js';
 import { leadRoutes } from './routes/lead.js';
+import { callbackRoutes } from './routes/callback.js';
+import { toolEventRoutes } from './routes/toolEvent.js';
 
 const app = Fastify({ logger: true });
 
@@ -19,6 +21,8 @@ app.get('/api/health', async () => ({
 
 await app.register(sessionRoutes);
 await app.register(leadRoutes);
+await app.register(callbackRoutes);
+await app.register(toolEventRoutes);
 
 // Раздача собранного фронта (прод): задать STATIC_DIR=../frontend/dist.
 if (config.staticDir) {
