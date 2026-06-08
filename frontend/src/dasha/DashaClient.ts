@@ -56,11 +56,11 @@ export class DashaClient implements Conversation {
 
     this.ws.onmessage = (ev) => this.onMessage(ev);
     this.ws.onerror = (e) => {
-      console.error('[DashaClient] ws error:', e);
+      console.error('[Dasha] ws error:', e);
       useStore.getState().setStatus('error');
     };
     this.ws.onclose = (e) => {
-      console.warn('[DashaClient] ws closed:', e.code, e.reason);
+      console.warn('[Dasha] ws closed — code:', e.code, '| reason:', e.reason || '(none)', '| wasClean:', e.wasClean);
       const s = useStore.getState();
       if (s.status === 'live' || s.status === 'connecting') s.setStatus('ended');
     };
@@ -73,6 +73,7 @@ export class DashaClient implements Conversation {
     } catch {
       return;
     }
+    console.log('[Dasha ←]', msg.type, msg);
     const store = useStore.getState();
 
     switch (msg.type) {

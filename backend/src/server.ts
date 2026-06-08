@@ -9,7 +9,14 @@ import { toolEventRoutes } from './routes/toolEvent.js';
 const app = Fastify({ logger: true });
 
 await app.register(cors, {
-  origin: config.frontendOrigin || true,
+  // В деве разрешаем любой localhost (порт может отличаться от .env).
+  origin: (origin, cb) => {
+    if (!origin || origin.startsWith('http://localhost') || origin === config.frontendOrigin) {
+      cb(null, true);
+    } else {
+      cb(new Error('CORS: origin not allowed'), false);
+    }
+  },
   methods: ['GET', 'POST'],
 });
 
