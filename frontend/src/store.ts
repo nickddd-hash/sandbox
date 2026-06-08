@@ -44,6 +44,17 @@ export interface Appointment {
   at: number; // для анимации появления
 }
 
+export interface RentalBooking {
+  id: string;
+  car: string;
+  dateFrom: string;
+  dateTo: string;
+  client: string;
+  city?: string;
+  at: number; // для анимации
+  available?: boolean; // результат check_availability
+}
+
 export interface OrderItem {
   id: string;
   name: string;
@@ -85,11 +96,14 @@ interface State {
   order: OrderItem[];
   orderHistory: OrderRecord[];
   bonusPoints: number;
+  rentals: RentalBooking[];
+  lastAvailabilityCheck: { car: string; available: boolean } | null;
 
   toolLog: ToolLogEntry[];
   showBehindScenes: boolean;
 
   // actions
+
   setNiche: (id: string) => void;
   openGate: () => void;
   submitContact: (name: string, phone: string) => void;
@@ -131,6 +145,8 @@ export const useStore = create<State>((set, get) => ({
   order: [],
   orderHistory: [],
   bonusPoints: 0,
+  rentals: [],
+  lastAvailabilityCheck: null,
 
   toolLog: [],
   showBehindScenes: false,
@@ -152,6 +168,8 @@ export const useStore = create<State>((set, get) => ({
       order: [],
       orderHistory: [],
       bonusPoints: 0,
+      rentals: [],
+      lastAvailabilityCheck: null,
       toolLog: [],
       status: 'idle',
     });
@@ -265,6 +283,29 @@ export const useStore = create<State>((set, get) => ({
         });
         return;
       }
+      case 'check_availability': {
+        const car = String(e.args.car ?? '');
+        // Для демо: если авто уже забронировано в текущей сессии — недоступно, иначе — свободно.
+        const alreadyBooked = get().rentals.some((r) => r.car === car);
+        set({ lastAvailabilityCheck: { car, available: !alreadyBooked } });
+        return;
+      }
+      case 'book_car': {
+        const booking: RentalBooking = {
+          id: e.id,
+          car: String(e.args.car ?? ''),
+          dateFrom: String(e.args.dateFrom ?? ''),
+          dateTo: String(e.args.dateTo ?? ''),
+          client: String(e.args.client ?? ''),
+          city: e.args.city != null ? String(e.args.city) : undefined,
+          at: now,
+        };
+        set((s) => {
+          if (s.rentals.some((r) => r.car === booking.car && r.dateFrom === booking.dateFrom)) return {};
+          return { rentals: [...s.rentals, booking] };
+        });
+        return;
+      }
       case 'add_order_item': {
         const item: OrderItem = {
           id: e.id,
@@ -324,6 +365,8 @@ export const useStore = create<State>((set, get) => ({
       order: [],
       orderHistory: [],
       bonusPoints: 0,
+      rentals: [],
+      lastAvailabilityCheck: null,
       toolLog: [],
       status: 'idle',
     });

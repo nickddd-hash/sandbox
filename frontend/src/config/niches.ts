@@ -213,7 +213,58 @@ const food: NicheConfig = {
   ],
 };
 
-export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food };
-// Салон — первый в списке и дефолтный: с него стартуем живое подключение Dasha.
-export const NICHE_LIST: NicheConfig[] = [salon, food, dental, auto, meat];
-export const DEFAULT_NICHE: NicheConfig = salon;
+const lendauto: NicheConfig = {
+  id: 'lendauto',
+  label: 'Прокат авто',
+  emoji: '🚗',
+  agentName: 'Марина, менеджер',
+  fields: [
+    { key: 'name', label: 'Имя' },
+    { key: 'phone', label: 'Телефон' },
+    { key: 'city', label: 'Город' },
+    { key: 'car', label: 'Автомобиль' },
+    { key: 'dateFrom', label: 'Дата от' },
+    { key: 'dateTo', label: 'Дата до' },
+  ],
+  roi: {
+    aiCostPerCall: 5,
+    humanCostPerCall: 60,
+    missedCallValue: 8000, // упущенная бронь
+    defaultCallsPerDay: 30,
+    defaultManagerSalary: 60000,
+  },
+  crmView: 'rental',
+  script: [
+    { at: 600, say: { from: 'agent', text: 'Lend Auto, добрый день, меня зовут Марина!' } },
+    { at: 2400, say: { from: 'user', text: 'Здравствуйте, хочу арендовать машину на несколько дней.' } },
+    { at: 3400, say: { from: 'agent', text: 'Отлично! Какой автомобиль вас интересует — эконом, комфорт или что-то побизнес-класса?' } },
+    { at: 5200, say: { from: 'user', text: 'Что-нибудь комфортное, типа Kia Rio или Hyundai.' } },
+    { at: 6000, say: { from: 'agent', text: 'Хорошо. Как вас зовут?' } },
+    { at: 7200, say: { from: 'user', text: 'Александр.' } },
+    { at: 7600, tool: { name: 'update_card', args: { field: 'name', value: 'Александр' } } },
+    { at: 8200, say: { from: 'agent', text: 'Из какого вы города?' } },
+    { at: 9400, say: { from: 'user', text: 'Краснодар.' } },
+    { at: 9800, tool: { name: 'update_card', args: { field: 'city', value: 'Краснодар' } } },
+    { at: 10400, tool: { name: 'update_card', args: { field: 'car', value: 'Kia Rio' } } },
+    { at: 11000, say: { from: 'agent', text: 'На какие даты планируете аренду?' } },
+    { at: 12600, say: { from: 'user', text: 'С 20 по 25 июня.' } },
+    { at: 13200, tool: { name: 'update_card', args: { field: 'dateFrom', value: '20 июня' } } },
+    { at: 13600, tool: { name: 'update_card', args: { field: 'dateTo', value: '25 июня' } } },
+    { at: 14200, say: { from: 'agent', text: 'Секунду, проверяю наличие на эти даты…' } },
+    { at: 15800, tool: { name: 'check_availability', args: { car: 'Kia Rio', dateFrom: '20 июня', dateTo: '25 июня' } } },
+    { at: 16400, say: { from: 'agent', text: 'Kia Rio свободен! Пять суток — итого 16 000 рублей. Подскажите телефон для SMS?' } },
+    { at: 18200, say: { from: 'user', text: '89221234567.' } },
+    { at: 18600, tool: { name: 'update_card', args: { field: 'phone', value: '+7 922 123-45-67' } } },
+    { at: 19400, say: { from: 'agent', text: 'Отправляю вам SMS со ссылкой для оформления брони.' } },
+    { at: 20000, tool: { name: 'show_sms', args: { text: 'Lend Auto: Kia Rio, 20–25 июня, Краснодар. Оформите бронь:', link: 'https://go.lend-auto.ru/' } } },
+    { at: 20400, tool: { name: 'book_car', args: { car: 'Kia Rio', dateFrom: '20 июня', dateTo: '25 июня', client: 'Александр', city: 'Краснодар' } } },
+    { at: 20800, tool: { name: 'lead_score', args: { score: 88, sentiment: 'горячий' } } },
+    { at: 21400, tool: { name: 'set_summary', args: { text: 'Александр, Краснодар — Kia Rio с 20 по 25 июня (5 сут, 16 000 ₽). Отправлено SMS со ссылкой на бронь.' } } },
+    { at: 22000, say: { from: 'agent', text: 'Ссылка отправлена. Залог 10 000 рублей при получении авто. Ждём вас!' } },
+  ],
+};
+
+export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food, lendauto };
+// Прокат авто — первый (демо для клиента), салон — дефолт для живого Dasha.
+export const NICHE_LIST: NicheConfig[] = [lendauto, salon, food, dental, auto, meat];
+export const DEFAULT_NICHE: NicheConfig = lendauto;

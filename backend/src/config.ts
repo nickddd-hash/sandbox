@@ -34,6 +34,7 @@ export const config = {
       meat: str('DASHA_INTEGRATION_MEAT'),
       salon: str('DASHA_INTEGRATION_SALON'),
       food: str('DASHA_INTEGRATION_FOOD'),
+      lendauto: str('DASHA_INTEGRATION_LENDAUTO'),
     } as Record<string, string>,
   },
 

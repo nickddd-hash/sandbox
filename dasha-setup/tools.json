@@ -77,6 +77,73 @@
         },
         "required": ["reason"]
       }
+    },
+    {
+      "name": "book_appointment",
+      "description": "Зафиксировать запись клиента в CRM-календаре. Вызывай ПОСЛЕ подтверждения деталей голосом. day — словом (понедельник / вторник / … / сегодня / завтра), time — ЧЧ:ММ.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "day":     { "type": "string", "description": "День записи: 'сегодня', 'завтра' или название дня недели." },
+          "time":    { "type": "string", "description": "Время в формате ЧЧ:ММ, например '14:30'." },
+          "service": { "type": "string", "description": "Название услуги." },
+          "client":  { "type": "string", "description": "Имя клиента." },
+          "master":  { "type": "string", "description": "Имя мастера (если назначен)." }
+        },
+        "required": ["day", "time", "service"]
+      }
+    },
+    {
+      "name": "add_order_item",
+      "description": "Добавить позицию в корзину заказа. Вызывай сразу, как клиент называет блюдо.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name":  { "type": "string",  "description": "Название позиции меню." },
+          "price": { "type": "number",  "description": "Цена за единицу в рублях." },
+          "qty":   { "type": "integer", "description": "Количество.", "default": 1 }
+        },
+        "required": ["name", "price"]
+      }
+    },
+    {
+      "name": "place_order",
+      "description": "Оформить заказ (зафиксировать корзину как принятый заказ). Вызывай после подтверждения клиентом всего состава.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "deliveryTime": { "type": "string", "description": "Обещанное время доставки, например '45 минут'." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "check_availability",
+      "description": "Проверить доступность автомобиля на нужные даты. Вызывай ПЕРЕД предложением бронирования. Возвращает available: true/false.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "car":      { "type": "string", "description": "Название автомобиля, например 'Hyundai Solaris'." },
+          "dateFrom": { "type": "string", "description": "Дата начала аренды (строка, как сказал клиент)." },
+          "dateTo":   { "type": "string", "description": "Дата окончания аренды." }
+        },
+        "required": ["car", "dateFrom", "dateTo"]
+      }
+    },
+    {
+      "name": "book_car",
+      "description": "Зафиксировать бронь автомобиля в CRM после подтверждения клиентом. Вызывай только если check_availability вернул available=true.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "car":      { "type": "string", "description": "Название автомобиля." },
+          "dateFrom": { "type": "string", "description": "Дата начала аренды." },
+          "dateTo":   { "type": "string", "description": "Дата окончания аренды." },
+          "client":   { "type": "string", "description": "Имя клиента." },
+          "city":     { "type": "string", "description": "Город получения автомобиля." }
+        },
+        "required": ["car", "dateFrom", "dateTo", "client"]
+      }
     }
   ]
 }

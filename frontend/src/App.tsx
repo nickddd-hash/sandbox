@@ -4,6 +4,7 @@ import { NicheSwitcher } from './components/NicheSwitcher';
 import { CrmBoard } from './components/CrmBoard';
 import { Calendar } from './components/Calendar';
 import { OrderBoard } from './components/OrderBoard';
+import { RentalBoard } from './components/RentalBoard';
 import { VoiceWidget } from './components/VoiceWidget';
 import { ChatWidget } from './components/ChatWidget';
 import { RoiPanel } from './components/RoiPanel';
@@ -46,10 +47,9 @@ export default function App() {
         </div>
       </header>
 
-      {transport === 'simulator' && (
+      {transport === 'simulator' && mode === 'presenter' && (
         <div className="bg-amber-950/40 border-b border-amber-800/40 text-amber-200 text-xs text-center py-1.5">
-          Режим симуляции — проигрывается демо-сценарий (Dasha не подключена).
-          {mode === 'presenter' && ' · презентер'}
+          Демо-сценарий · презентер
         </div>
       )}
 
@@ -64,7 +64,7 @@ export default function App() {
       </main>
 
       <div className="max-w-6xl mx-auto px-4 pb-8">
-        {crmView === 'order' ? <OrderBoard /> : <Calendar />}
+        {crmView === 'rental' ? <RentalBoard /> : crmView === 'order' ? <OrderBoard /> : <Calendar />}
       </div>
 
       <ContactGate onConfirm={confirmContact} />

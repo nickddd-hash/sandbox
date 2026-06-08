@@ -14,10 +14,10 @@
  * (или сделай IVR: по нажатию клавиши выбирать салон/еду).
  */
 
-// SIP-URI агентов Dasha (inboundSipConfig.sipUri):
+// SIP-URI агентов Dasha (inboundSipConfig.sipUri) — RU-платформа (sip.ru.dasha.ai):
 const AGENTS = {
-  salon: 'sip:e1a10fe7-5763-4aea-8fc7-eaa6c1edc597@sip.us.dasha.ai',
-  food: 'sip:edfc6ee6-dfc0-480b-a3c0-3a23f4d54ba7@sip.us.dasha.ai',
+  salon: 'sip:SALON_SIP_ID@sip.ru.dasha.ai',
+  food: 'sip:FOOD_SIP_ID@sip.ru.dasha.ai',
 };
 
 // Какой агент отвечает на этот номер:
