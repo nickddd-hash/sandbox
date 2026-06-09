@@ -79,7 +79,11 @@ export class DashaClient implements Conversation {
     switch (msg.type) {
       case 'ready':
       case 'started':
-        store.setStatus('live');
+      // RU-платформа шлёт {type:'event', name:'connection'|'opened'} вместо ready/started
+      case 'event':
+        if (!msg.content?.name || msg.content.name === 'opened' || msg.content.name === 'connection') {
+          store.setStatus('live');
+        }
         break;
 
       case 'text': {
