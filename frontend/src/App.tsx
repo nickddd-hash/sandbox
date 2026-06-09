@@ -45,17 +45,24 @@ export default function App() {
       )}
 
       <main className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-        <CrmBoard />
+        <div className="flex flex-col gap-6">
+          <CrmBoard />
+          {/* Блок заказа — сразу под карточкой лида, чтобы был на виду */}
+          {crmView === 'order' && <OrderBoard />}
+        </div>
         <div className="flex flex-col gap-4">
           <VoiceWidget onLaunch={() => void launch('voice')} onStop={stop} />
           <ChatWidget />
-<RoiPanel />
+          <RoiPanel />
         </div>
       </main>
 
-      <div className="max-w-6xl mx-auto px-4 pb-8">
-        {crmView === 'rental' ? <RentalBoard /> : crmView === 'order' ? <OrderBoard /> : <Calendar />}
-      </div>
+      {/* Широкие доски для остальных ниш */}
+      {(crmView === 'rental' || crmView === 'calendar') && (
+        <div className="max-w-6xl mx-auto px-4 pb-8">
+          {crmView === 'rental' ? <RentalBoard /> : <Calendar />}
+        </div>
+      )}
 
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
       <BehindTheScenes />
