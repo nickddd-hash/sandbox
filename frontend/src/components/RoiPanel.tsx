@@ -24,10 +24,6 @@ export function RoiPanel() {
         <span className="text-white font-semibold">{RATE_PER_MIN} ₽</span>
       </div>
 
-      <div className="flex items-center justify-between text-sm border-t border-slate-700 pt-2 mb-3">
-        <span className="text-slate-400">Живой менеджер (расчёт по зарплате)</span>
-        <span className="text-slate-400">~15 ₽/мин</span>
-      </div>
 
       {showResult ? (
         <div className="rounded-lg bg-emerald-900/30 border border-emerald-700/50 px-4 py-3 animate-field-pop">
