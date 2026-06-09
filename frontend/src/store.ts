@@ -101,6 +101,7 @@ interface State {
 
   toolLog: ToolLogEntry[];
   showBehindScenes: boolean;
+  lastCallSec: number | null;
 
   // actions
 
@@ -110,6 +111,7 @@ interface State {
   beginSession: (s: { sessionId: string; mode: SessionMode; transport: Transport }) => void;
   setChannel: (c: Channel) => void;
   setStatus: (s: ConnStatus) => void;
+  setLastCallSec: (sec: number) => void;
   addMessage: (m: Omit<ChatMessage, 'id'>) => void;
   applyTool: (e: ToolEvent) => void;
   toggleBehindScenes: () => void;
@@ -150,6 +152,7 @@ export const useStore = create<State>((set, get) => ({
 
   toolLog: [],
   showBehindScenes: false,
+  lastCallSec: null,
 
   setNiche: (id) => {
     const niche = NICHES[id] ?? DEFAULT_NICHE;
@@ -348,6 +351,7 @@ export const useStore = create<State>((set, get) => ({
   },
 
   toggleBehindScenes: () => set((s) => ({ showBehindScenes: !s.showBehindScenes })),
+  setLastCallSec: (sec) => set({ lastCallSec: sec }),
   clearCallback: () => set({ pendingCallback: null }),
 
   resetConversation: () => {

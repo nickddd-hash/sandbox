@@ -17,6 +17,7 @@ export function VoiceWidget({ onLaunch, onStop }: Props) {
   const status = useStore((s) => s.status);
   const channel = useStore((s) => s.channel);
   const agentName = useStore((s) => s.niche.agentName);
+  const setLastCallSec = useStore((s) => s.setLastCallSec);
   const active = (status === 'connecting' || status === 'live') && channel === 'voice';
   const [sec, setSec] = useState(0);
 
@@ -25,6 +26,9 @@ export function VoiceWidget({ onLaunch, onStop }: Props) {
       setSec(0);
       const t = setInterval(() => setSec((x) => x + 1), 1000);
       return () => clearInterval(t);
+    }
+    if (status === 'ended' && channel === 'voice') {
+      setLastCallSec(sec);
     }
   }, [status, channel]);
 

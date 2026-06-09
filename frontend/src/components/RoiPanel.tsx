@@ -1,43 +1,52 @@
-import { useState } from 'react';
 import { useStore } from '../store';
 
-const WORK_DAYS = 22;
+const RATE_PER_MIN = 8; // ₽ за минуту разговора
 
-// Объём обращений: пользователь вводит звонки/день. Без выдуманной «экономии» —
-// точная стоимость считается по фактическому тарифу Dasha после подключения биллинга.
+function fmt(sec: number): string {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m > 0 ? `${m} мин ${s} сек` : `${s} сек`;
+}
+
 export function RoiPanel() {
-  const niche = useStore((s) => s.niche);
-  const [callsPerDay, setCallsPerDay] = useState(niche.roi.defaultCallsPerDay);
-  const callsPerMonth = Math.round(callsPerDay * WORK_DAYS);
+  const status = useStore((s) => s.status);
+  const lastCallSec = useStore((s) => s.lastCallSec);
+
+  const showResult = status === 'ended' && lastCallSec !== null && lastCallSec > 0;
+  const cost = lastCallSec ? (lastCallSec / 60) * RATE_PER_MIN : 0;
 
   return (
     <div className="rounded-xl border border-slate-700 bg-panel/60 p-5">
-      <div className="text-sm uppercase tracking-wide text-slate-400 mb-3">📊 Объём обращений</div>
+      <div className="text-sm uppercase tracking-wide text-slate-400 mb-3">💰 Тарификация</div>
 
-      <label className="block text-sm text-slate-300 mb-3">
-        Звонков в день: <span className="font-semibold text-white">{callsPerDay}</span>
-        <input
-          type="range"
-          min={5}
-          max={150}
-          value={callsPerDay}
-          onChange={(e) => setCallsPerDay(Number(e.target.value))}
-          className="w-full mt-1 accent-emerald-500"
-        />
-      </label>
-
-      <div className="flex items-center justify-between text-sm border-t border-slate-700 pt-3">
-        <span className="text-slate-400">Обращений в месяц</span>
-        <span className="text-white font-semibold tabular-nums">
-          {callsPerMonth.toLocaleString('ru-RU')}
-        </span>
+      <div className="flex items-center justify-between text-sm mb-2">
+        <span className="text-slate-400">Стоимость минуты ИИ</span>
+        <span className="text-white font-semibold">{RATE_PER_MIN} ₽</span>
       </div>
 
-      <p className="text-[11px] text-slate-500 mt-3">
-        ИИ обрабатывает все обращения 24/7, без пропущенных и без ручного ввода. Точную
-        стоимость и экономию посчитаем по фактическому тарифу Dasha и средней длительности
-        звонка после подключения биллинга.
-      </p>
+      <div className="flex items-center justify-between text-sm border-t border-slate-700 pt-2 mb-3">
+        <span className="text-slate-400">Живой менеджер</span>
+        <span className="text-slate-400">~40–60 ₽/мин</span>
+      </div>
+
+      {showResult ? (
+        <div className="rounded-lg bg-emerald-900/30 border border-emerald-700/50 px-4 py-3 animate-field-pop">
+          <div className="text-xs text-emerald-400 uppercase tracking-wide mb-1">Последний разговор</div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-slate-300 text-sm">{fmt(lastCallSec!)}</span>
+            <span className="text-emerald-300 font-bold text-lg">
+              {cost < 1 ? '< 1' : cost.toFixed(1)} ₽
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-500 mt-1">
+            {RATE_PER_MIN} ₽ × {(lastCallSec! / 60).toFixed(1)} мин
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11px] text-slate-500">
+          После разговора здесь появится стоимость звонка.
+        </p>
+      )}
     </div>
   );
 }
