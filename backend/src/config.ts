@@ -35,6 +35,7 @@ export const config = {
       salon: str('DASHA_INTEGRATION_SALON'),
       food: str('DASHA_INTEGRATION_FOOD'),
       lendauto: str('DASHA_INTEGRATION_LENDAUTO'),
+      'lendauto-chat': str('DASHA_INTEGRATION_LENDAUTO_CHAT'),
     } as Record<string, string>,
   },
 

@@ -3,11 +3,12 @@ import type { Niche, StartSessionResponse } from './types';
 export async function startSession(
   niche: Niche,
   presenterKey?: string,
+  channel?: string,
 ): Promise<StartSessionResponse> {
   const res = await fetch('/api/session/start', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ niche, presenterKey }),
+    body: JSON.stringify({ niche, presenterKey, channel }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

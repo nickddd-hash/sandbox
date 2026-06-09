@@ -12,7 +12,7 @@ import {
 
 export async function sessionRoutes(app: FastifyInstance): Promise<void> {
   app.post('/api/session/start', async (req, reply) => {
-    const body = (req.body ?? {}) as { niche?: unknown; presenterKey?: unknown };
+    const body = (req.body ?? {}) as { niche?: unknown; presenterKey?: unknown; channel?: unknown };
 
     if (!isNiche(body.niche)) {
       return reply.code(400).send({ error: 'invalid_niche' });
@@ -52,7 +52,9 @@ export async function sessionRoutes(app: FastifyInstance): Promise<void> {
       return reply.send(base);
     }
 
-    const integrationId = integrationIdForNiche(niche);
+    const channel = body.channel === 'chat' ? 'chat' : 'voice';
+    const nicheKey = channel === 'chat' ? `${niche}-chat` : niche;
+    const integrationId = integrationIdForNiche(nicheKey) ?? integrationIdForNiche(niche);
     if (!integrationId) {
       req.log.warn({ niche }, 'нет integrationId для ниши — fallback на simulator');
       return reply.send(base);

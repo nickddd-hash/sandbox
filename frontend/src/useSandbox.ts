@@ -38,7 +38,7 @@ export function useSandbox() {
     }
 
     try {
-      const session = await startSession(s.niche.id, presenterKey());
+      const session = await startSession(s.niche.id, presenterKey(), channel);
       // Канал выбирается на фронте: голос → webCall (WebRTC), текст → chat (без аудио).
       if (session.dasha) {
         session.dasha.callType = channel === 'chat' ? 'chat' : 'webCall';
