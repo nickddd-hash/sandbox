@@ -51,7 +51,7 @@ const TOOLS = [
   { name: 'transfer', description: 'Перевести на живого оператора', parameters: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] } },
 ];
 
-type Message = { role: 'user' | 'assistant' | 'system' | 'tool'; content: string; tool_call_id?: string; name?: string };
+type Message = { role: 'user' | 'assistant' | 'system' | 'tool'; content: string | null; tool_call_id?: string; tool_calls?: ToolCall[] };
 
 interface ToolCall { id: string; type: 'function'; function: { name: string; arguments: string } }
 
@@ -92,7 +92,9 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       const msg = data.choices[0]?.message;
       if (!msg) break;
 
-      messages.push({ role: 'assistant', content: msg.content ?? '' });
+      // Включаем tool_calls в assistant-сообщение — без них tool-результаты «висят в воздухе»
+      // и LLM не понимает контекст, повторяя уже заданные вопросы.
+      messages.push({ role: 'assistant', content: msg.content ?? null, ...(msg.tool_calls && { tool_calls: msg.tool_calls }) });
 
       if (!msg.tool_calls?.length) break;
 
@@ -100,7 +102,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
         toolCalls.push({ id: tc.id, name: tc.function.name, args });
         const toolResult = tc.function.name === 'check_availability' ? JSON.stringify({ available: true }) : JSON.stringify({ result: 'ok' });
-        messages.push({ role: 'tool', content: toolResult, tool_call_id: tc.id, name: tc.function.name });
+        messages.push({ role: 'tool', content: toolResult, tool_call_id: tc.id });
       }
     }
 

@@ -14,11 +14,16 @@ export function ChatWidget() {
   const [draft, setDraft] = useState('');
   const historyRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    if (active && !loading) inputRef.current?.focus();
+  }, [messages, loading, active]);
 
   const handleResponse = (reply: string, toolCalls: { id: string; name: string; args: Record<string, unknown> }[]) => {
     if (reply) {
@@ -114,6 +119,7 @@ export function ChatWidget() {
         ) : (
           <>
             <input
+              ref={inputRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && void submit()}
