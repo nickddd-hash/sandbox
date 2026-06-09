@@ -25,12 +25,6 @@ export function useSandbox() {
 
     s.setChannel(channel);
 
-    // Публичный режим без контакта — сперва гейт (контакт = первый лид).
-    if (s.mode === 'public' && !s.contact && !presenterKey()) {
-      s.openGate();
-      return;
-    }
-
     s.resetConversation();
     // Контакт переносим обратно в карточку после reset.
     if (s.contact) {
