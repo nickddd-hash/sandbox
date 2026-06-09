@@ -108,10 +108,10 @@ const meat: NicheConfig = {
   script: [
     { at: 600, say: { from: 'agent', text: 'Meat Foods, здравствуйте! Меня зовут Ольга. Помогу подобрать продукцию и оформить заказ. Что вас интересует?' } },
     { at: 2600, say: { from: 'user', text: 'Нужно филе грудки и заготовка для шаурмы из курицы.' } },
-    { at: 3200, tool: { name: 'add_order_item', args: { name: 'Филе грудки (халяль)', price: 420, qty: 10 } } },
+    { at: 3200, tool: { name: 'add_order_item', args: { name: 'Филе грудки (халяль)', price: 420, qty: 10, unit: 'кг' } } },
     { at: 3800, say: { from: 'agent', text: 'Записала. Сколько филе грудки и заготовки для шаурмы — в килограммах?' } },
     { at: 5400, say: { from: 'user', text: '10 кг филе и 15 кг заготовки.' } },
-    { at: 6000, tool: { name: 'add_order_item', args: { name: 'Заготовка для шаурмы (курица)', price: 320, qty: 15 } } },
+    { at: 6000, tool: { name: 'add_order_item', args: { name: 'Заготовка для шаурмы (курица)', price: 320, qty: 15, unit: 'кг' } } },
     { at: 6800, say: { from: 'agent', text: 'Итого 25 кг — по Москве доставка бесплатная. Куда везём?' } },
     { at: 8200, say: { from: 'user', text: 'Ресторан «Прайм», Москва, ул. Тверская 5.' } },
     { at: 8700, tool: { name: 'update_card', args: { field: 'company', value: 'Ресторан «Прайм»' } } },

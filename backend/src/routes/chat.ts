@@ -67,7 +67,7 @@ const MEATFOODS_PROMPT = `Ты — Ольга, ЖЕНЩИНА, менеджер 
 
 РАБОТА С CRM — АБСОЛЮТНОЕ ПРАВИЛО: НИКОГДА не пиши «записала», «уточнила», «оформила», «приняла», «итого» без НЕМЕДЛЕННОГО вызова соответствующего инструмента. Сначала ВЫЗОВ TOOL, потом фраза-подтверждение. Исключений нет.
 ТОЛЬКО ОДИН РАЗ: каждый tool вызывай лишь при ПЕРВОМ получении новой информации. НЕ повторяй add_order_item для уже добавленной позиции и update_card для уже записанного поля — иначе заказ задвоится. При пересказе/подтверждении заказа НЕ вызывай tools повторно.
-— Каждая позиция заказа → add_order_item(name, price, qty). qty в кг (тушки и гриль — в штуках), price — ₽ за единицу.
+— Каждая позиция заказа → add_order_item(name, price, qty, unit). unit = 'кг' для мяса и разделки; unit = 'шт' для тушек, кур гриль, лаваша, питы. qty — число, price — ₽ за единицу (за кг или за шт).
 — Город/адрес доставки → update_card(field:"address"). Название заведения или юрлица → update_card(field:"company"). Имя → update_card(field:"name"). Телефон → update_card(field:"phone"). Одно поле за вызов.
 — Перед словами об оформлении заказа ОБЯЗАТЕЛЬНО вызови place_order(deliveryTime). Перед «отправляю SMS» → show_sms. В самом конце → lead_score + set_summary. Просит живого менеджера или крупный/нестандартный опт → transfer.
 
@@ -94,7 +94,7 @@ const T = {
   lead_score: { name: 'lead_score', description: 'Оценка лида', parameters: { type: 'object', properties: { score: { type: 'number' }, sentiment: { type: 'string' } }, required: ['score', 'sentiment'] } },
   show_sms: { name: 'show_sms', description: 'Показать SMS со ссылкой', parameters: { type: 'object', properties: { text: { type: 'string' }, link: { type: 'string' } }, required: ['text', 'link'] } },
   book_car: { name: 'book_car', description: 'Оформить бронь авто', parameters: { type: 'object', properties: { car: { type: 'string' }, dateFrom: { type: 'string' }, dateTo: { type: 'string' }, client: { type: 'string' }, city: { type: 'string' } }, required: ['car', 'dateFrom', 'dateTo', 'client'] } },
-  add_order_item: { name: 'add_order_item', description: 'Добавить позицию в заказ. price — ₽ за единицу, qty — количество (кг или шт)', parameters: { type: 'object', properties: { name: { type: 'string' }, price: { type: 'number' }, qty: { type: 'number' } }, required: ['name', 'price', 'qty'] } },
+  add_order_item: { name: 'add_order_item', description: 'Добавить позицию в заказ. price — ₽ за единицу, qty — количество, unit — единица измерения', parameters: { type: 'object', properties: { name: { type: 'string' }, price: { type: 'number' }, qty: { type: 'number' }, unit: { type: 'string', description: "единица измерения: 'кг' или 'шт'" } }, required: ['name', 'price', 'qty', 'unit'] } },
   place_order: { name: 'place_order', description: 'Оформить заказ на доставку', parameters: { type: 'object', properties: { deliveryTime: { type: 'string' } }, required: ['deliveryTime'] } },
   request_callback: { name: 'request_callback', description: 'Запросить обратный звонок', parameters: { type: 'object', properties: { delaySeconds: { type: 'number' }, reason: { type: 'string' } }, required: ['delaySeconds', 'reason'] } },
   transfer: { name: 'transfer', description: 'Перевести на живого оператора', parameters: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] } },

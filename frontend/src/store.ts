@@ -60,6 +60,7 @@ export interface OrderItem {
   name: string;
   price: number;
   qty: number;
+  unit?: string; // 'кг' | 'шт' и т.п. (по умолчанию 'шт')
   at: number;
 }
 
@@ -67,7 +68,7 @@ export interface OrderItem {
 export interface OrderRecord {
   id: string;
   placedAt: number;
-  items: { name: string; qty: number; price: number }[];
+  items: { name: string; qty: number; price: number; unit?: string }[];
   total: number;
   deliveryTime?: string;
 }
@@ -315,6 +316,7 @@ export const useStore = create<State>((set, get) => ({
           name: String(e.args.name ?? ''),
           price: Number(e.args.price) || 0,
           qty: Number(e.args.qty) || 1,
+          unit: e.args.unit != null && String(e.args.unit).trim() ? String(e.args.unit).trim() : undefined,
           at: now,
         };
         set((s) => {
@@ -333,7 +335,7 @@ export const useStore = create<State>((set, get) => ({
           const record: OrderRecord = {
             id: e.id,
             placedAt: now,
-            items: s.order.map((it) => ({ name: it.name, qty: it.qty, price: it.price })),
+            items: s.order.map((it) => ({ name: it.name, qty: it.qty, price: it.price, unit: it.unit })),
             total,
             deliveryTime: e.args.deliveryTime != null ? String(e.args.deliveryTime) : undefined,
           };

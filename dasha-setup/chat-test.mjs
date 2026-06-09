@@ -2,7 +2,8 @@
 // Тест текстового чата по нише через наш бэкенд /api/chat.
 //   node dasha-setup/chat-test.mjs [niche]
 const niche = process.argv[2] || 'meat';
-const post = (body) => fetch('http://localhost:8080/api/chat', {
+const URL = process.env.CHAT_URL || 'http://localhost:8080/api/chat';
+const post = (body) => fetch(URL, {
   method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
 }).then((r) => r.json());
 
