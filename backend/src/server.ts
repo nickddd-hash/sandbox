@@ -5,6 +5,7 @@ import { sessionRoutes } from './routes/session.js';
 import { leadRoutes } from './routes/lead.js';
 import { callbackRoutes } from './routes/callback.js';
 import { toolEventRoutes } from './routes/toolEvent.js';
+import { chatRoutes } from './routes/chat.js';
 
 const app = Fastify({ logger: true });
 
@@ -27,6 +28,7 @@ app.get('/api/health', async () => ({
 }));
 
 await app.register(sessionRoutes);
+await app.register(chatRoutes);
 await app.register(leadRoutes);
 await app.register(callbackRoutes);
 await app.register(toolEventRoutes);

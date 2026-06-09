@@ -13,7 +13,7 @@ import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
 
 export default function App() {
-  const { launch, stop, sendText } = useSandbox();
+  const { launch, stop } = useSandbox();
   const transport = useStore((s) => s.transport);
   const mode = useStore((s) => s.mode);
   const crmView = useStore((s) => s.niche.crmView);
@@ -56,7 +56,7 @@ export default function App() {
         <CrmBoard />
         <div className="flex flex-col gap-4">
           <VoiceWidget onLaunch={() => void launch('voice')} onStop={stop} />
-          <ChatWidget onLaunch={() => void launch('chat')} onSend={sendText} onStop={stop} />
+          <ChatWidget />
 <RoiPanel />
         </div>
       </main>

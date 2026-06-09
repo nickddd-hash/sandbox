@@ -35,8 +35,14 @@ export const config = {
       salon: str('DASHA_INTEGRATION_SALON'),
       food: str('DASHA_INTEGRATION_FOOD'),
       lendauto: str('DASHA_INTEGRATION_LENDAUTO'),
-      'lendauto-chat': str('DASHA_INTEGRATION_LENDAUTO_CHAT'),
+
     } as Record<string, string>,
+  },
+
+  hubris: {
+    apiKey: str('HUBRIS_API_KEY'),
+    baseUrl: 'https://api.hubris.pw/v1',
+    model: 'google/gemini-2.5-flash',
   },
 
   voximplant: {

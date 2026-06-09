@@ -3,12 +3,11 @@ import type { Niche, StartSessionResponse } from './types';
 export async function startSession(
   niche: Niche,
   presenterKey?: string,
-  channel?: string,
 ): Promise<StartSessionResponse> {
   const res = await fetch('/api/session/start', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ niche, presenterKey, channel }),
+    body: JSON.stringify({ niche, presenterKey }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -27,6 +26,19 @@ export async function startCallback(phone: string, niche: string): Promise<{ ses
     const body = await res.json().catch(() => ({}));
     throw new Error((body as { error?: string }).error ?? `callback_${res.status}`);
   }
+  return res.json();
+}
+
+export async function sendChatMessage(
+  message: string | undefined,
+  history: { role: 'user' | 'assistant'; content: string }[],
+): Promise<{ reply: string; toolCalls: { id: string; name: string; args: Record<string, unknown> }[] }> {
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ message, history }),
+  });
+  if (!res.ok) throw new Error(`chat_${res.status}`);
   return res.json();
 }
 

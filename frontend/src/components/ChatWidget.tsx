@@ -1,33 +1,69 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
+import { sendChatMessage } from '../api';
+import type { ToolEvent } from '../types';
 
-interface Props {
-  onLaunch: () => void;
-  onSend: (text: string) => void;
-  onStop: () => void;
-}
-
-// Текстовый виджет — общение с тем же ИИ-агентом в переписке.
-export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
-  const status = useStore((s) => s.status);
-  const channel = useStore((s) => s.channel);
+// Текстовый виджет — напрямую через Hubris API (не Dasha).
+export function ChatWidget() {
+  const applyTool = useStore((s) => s.applyTool);
+  const addMessage = useStore((s) => s.addMessage);
   const messages = useStore((s) => s.messages);
+
+  const [active, setActive] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [draft, setDraft] = useState('');
+  const historyRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const active = (status === 'connecting' || status === 'live') && channel === 'chat';
-
-  // Прокручиваем ТОЛЬКО внутренний контейнер чата, а не всю страницу.
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  const submit = () => {
+  const handleResponse = (reply: string, toolCalls: { id: string; name: string; args: Record<string, unknown> }[]) => {
+    if (reply) {
+      addMessage({ from: 'agent', text: reply });
+      historyRef.current.push({ role: 'assistant', content: reply });
+    }
+    for (const tc of toolCalls) {
+      applyTool({ id: tc.id, name: tc.name, args: tc.args } as ToolEvent);
+    }
+  };
+
+  const launch = async () => {
+    setActive(true);
+    setLoading(true);
+    historyRef.current = [];
+    try {
+      const { reply, toolCalls } = await sendChatMessage(undefined, []);
+      handleResponse(reply, toolCalls);
+    } catch {
+      addMessage({ from: 'agent', text: 'Ошибка соединения. Попробуйте ещё раз.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submit = async () => {
     const text = draft.trim();
-    if (!text) return;
-    onSend(text);
+    if (!text || loading) return;
     setDraft('');
+    addMessage({ from: 'user', text });
+    historyRef.current.push({ role: 'user', content: text });
+    setLoading(true);
+    try {
+      const { reply, toolCalls } = await sendChatMessage(text, historyRef.current.slice(0, -1));
+      handleResponse(reply, toolCalls);
+    } catch {
+      addMessage({ from: 'agent', text: 'Ошибка. Попробуйте ещё раз.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stop = () => {
+    setActive(false);
+    historyRef.current = [];
   };
 
   return (
@@ -35,7 +71,7 @@ export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm uppercase tracking-wide text-slate-400">💬 Чат с ИИ</div>
         {active && (
-          <button onClick={onStop} className="text-xs text-red-400 hover:text-red-300">
+          <button onClick={stop} className="text-xs text-red-400 hover:text-red-300">
             завершить
           </button>
         )}
@@ -60,12 +96,17 @@ export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
             {m.text}
           </div>
         ))}
+        {loading && (
+          <div className="bg-slate-800 text-slate-400 rounded-lg px-3 py-2 text-sm max-w-[85%] animate-pulse">
+            …
+          </div>
+        )}
       </div>
 
       <div className="mt-3 flex gap-2">
         {!active ? (
           <button
-            onClick={onLaunch}
+            onClick={launch}
             className="w-full py-2 rounded-lg bg-accent hover:bg-blue-500 text-white font-medium"
           >
             Начать чат
@@ -75,13 +116,15 @@ export function ChatWidget({ onLaunch, onSend, onStop }: Props) {
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && submit()}
+              onKeyDown={(e) => e.key === 'Enter' && void submit()}
               placeholder="Напишите сообщение…"
-              className="flex-1 rounded-lg bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-white outline-none focus:border-accent"
+              disabled={loading}
+              className="flex-1 rounded-lg bg-slate-800 border border-slate-600 px-3 py-2 text-sm text-white outline-none focus:border-accent disabled:opacity-50"
             />
             <button
-              onClick={submit}
-              className="px-4 rounded-lg bg-accent hover:bg-blue-500 text-white text-sm"
+              onClick={() => void submit()}
+              disabled={loading}
+              className="px-4 rounded-lg bg-accent hover:bg-blue-500 text-white text-sm disabled:opacity-50"
             >
               ↑
             </button>
