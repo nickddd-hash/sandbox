@@ -102,19 +102,24 @@ App рендерит: `rental` → RentalBoard · `order` → OrderBoard · `cal
 - Запрет `um`/`uh` → заменено на: хорошо, поняла, минутку, ясно, отлично
 - **→ Нужно вручную вставить обновлённый промпт из `dasha-setup/prompts.md` в Dasha Dashboard**
 
-## Статус (2026-06-08)
-✅ Браузер (голос+чат+CRM+calendar/order+бонусы+SMS+перезвон): работает end-to-end, проверено вживую.
-✅ Voximplant → Dasha SIP: интеграция проверена (тестовый номер).
-✅ Callback-инфраструктура: код готов, ждёт env-переменных и конфига Dasha webhook.
-✅ Ниша lendauto: RU-агент создан, simulator-сценарий, RentalBoard (сетка авто × 7 дней).
-✅ Миграция бэкенда на RU-платформу: DASHA_BASE_URL=https://blackbox.ru.dasha.ai в .env.
-🚧 Промпты агентов обновлены в файле — надо вставить в Dasha Dashboard (salon + lendauto).
-🚧 Salon/food агенты — пока на US-платформе; нужна миграция на RU (новый ключ от клиента).
-🚧 Для callback на реальные телефоны — нужен Caller ID / купить номер.
-🚧 Агенты dental/auto/meat — пока simulator, по образцу salon/food.
-🚧 Деплой на `demo.flowsmart.ru` (pm2 + Caddy на Hostkey 194.34.239.230).
+## Деплой (прод) — ЖИВОЙ
+- **URL: https://sandbox.flowsmart.ru** (НЕ demo!). VPS Hostkey `194.34.239.230`, каталог **`/root/sandbox`** (это НЕ git-репозиторий — выкладка через scp), pm2-процесс **`sandbox-backend`** = `npx tsx backend/src/server.ts`, **PORT=3011**, `STATIC_DIR=/root/sandbox/frontend/dist`, за Caddy (в контейнере).
+- **Процесс:** git-first (push в GitHub) → `npm run build --workspace=frontend` локально → scp `backend/src` и `frontend/dist` в `/root/sandbox` → **ОБЯЗАТЕЛЬНО `pm2 restart sandbox-backend`** (Fastify-статика индексирует файлы при старте; без рестарта новый бандл не отдаётся → белый экран).
+- SSH: `ssh -i ~/.ssh/hostkey_main_ed25519 root@194.34.239.230`. `backend/.env` на сервере — отдельный (свои PORT/STATIC_DIR/ключи); правки .env только surgical (бэкап + append), не перезатирать.
+
+## Текстовый чат — через Hubris (НЕ Dasha)
+- Чат идёт `backend/src/routes/chat.ts` → прокси `api.hubris.pw` (OpenAI-совместимый, ключ `HUBRIS_API_KEY`, модель `HUBRIS_MODEL` в .env). Параметризован по нише (lendauto / meat).
+- Модель чата — **`openai/gpt-4o-mini`** (надёжный function-calling; flash-lite заваливал tools). Голос — отдельно, через Dasha-агента (lendauto, модель `gemini-2.5-flash-lite`).
+
+## Статус (2026-06-10)
+✅ Прод живой на https://sandbox.flowsmart.ru (браузер: голос+чат+CRM+order/rental/calendar, end-to-end).
+✅ Ниша lendauto: живой Dasha RU (голос+чат), агент `gemini-2.5-flash-lite`.
+✅ Ниша **Meat Foods** (бывш. `meat`): order-демо, текстовый чат ЖИВОЙ (Ольга, ассортимент meatfoods.ru, позиции с кг/ценой за кг, вес заказа, доставка от 15 кг, валидация телефона, обращение на «Вы», оплата нал/безнал). Голос — пока simulator (Dasha-агента для meat нет).
+🚧 Голосовой Dasha-агент Meat Foods — не создан.
+🚧 Salon/food агенты — пока на US-платформе; нужна миграция на RU.
+🚧 Второй виджет на Яндексе (AI Studio Realtime) — ждёт Folder ID (нет баланса на Yandex Cloud).
+🚧 Телефония lend-auto.ru: Megafon ВАТС → Voximplant → Dasha SIP (архитектура готова, нужны ключи/Caller ID).
 🚧 Публичный режим + Supabase для лидов.
-🚧 Клиент lend-auto.ru: Megafon ВАТС → Voximplant → Dasha SIP (архитектура готова, нужны ключи).
 
 ## Гочи
 - Запуск нового разговора глушит предыдущий (без двойных звонков); перезвон всплывает только после завершения текущего звонка.
