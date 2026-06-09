@@ -32,11 +32,12 @@ export async function startCallback(phone: string, niche: string): Promise<{ ses
 export async function sendChatMessage(
   message: string | undefined,
   history: { role: 'user' | 'assistant'; content: string }[],
+  niche: Niche,
 ): Promise<{ reply: string; toolCalls: { id: string; name: string; args: Record<string, unknown> }[] }> {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ message, history }),
+    body: JSON.stringify({ message, history, niche }),
   });
   if (!res.ok) throw new Error(`chat_${res.status}`);
   return res.json();

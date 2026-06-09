@@ -8,6 +8,7 @@ export function ChatWidget() {
   const applyTool = useStore((s) => s.applyTool);
   const addMessage = useStore((s) => s.addMessage);
   const messages = useStore((s) => s.messages);
+  const nicheId = useStore((s) => s.niche.id);
 
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ export function ChatWidget() {
     setLoading(true);
     historyRef.current = [];
     try {
-      const { reply, toolCalls } = await sendChatMessage(undefined, []);
+      const { reply, toolCalls } = await sendChatMessage(undefined, [], nicheId);
       handleResponse(reply, toolCalls);
     } catch {
       addMessage({ from: 'agent', text: 'Ошибка соединения. Попробуйте ещё раз.' });
@@ -57,7 +58,7 @@ export function ChatWidget() {
     historyRef.current.push({ role: 'user', content: text });
     setLoading(true);
     try {
-      const { reply, toolCalls } = await sendChatMessage(text, historyRef.current.slice(0, -1));
+      const { reply, toolCalls } = await sendChatMessage(text, historyRef.current.slice(0, -1), nicheId);
       handleResponse(reply, toolCalls);
     } catch {
       addMessage({ from: 'agent', text: 'Ошибка. Попробуйте ещё раз.' });

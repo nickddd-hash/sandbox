@@ -41,8 +41,8 @@ export const config = {
 
   hubris: {
     apiKey: str('HUBRIS_API_KEY'),
-    baseUrl: 'https://api.hubris.pw/v1',
-    model: 'google/gemini-2.5-flash',
+    baseUrl: str('HUBRIS_BASE_URL', 'https://api.hubris.pw/v1'),
+    model: str('HUBRIS_MODEL', 'google/gemini-2.5-flash'),
   },
 
   voximplant: {

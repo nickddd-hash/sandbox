@@ -318,8 +318,10 @@ export const useStore = create<State>((set, get) => ({
           at: now,
         };
         set((s) => {
-          // Защита от дублей повторного вызова tool по одной позиции.
-          if (s.order.some((x) => x.name === item.name && x.price === item.price)) return {};
+          // Защита от дублей повторного вызова tool по одной позиции
+          // (модель может переслать ту же позицию с другим регистром/пробелами).
+          const norm = (n: string) => n.trim().toLowerCase();
+          if (s.order.some((x) => norm(x.name) === norm(item.name))) return {};
           return { order: [...s.order, item] };
         });
         return;
