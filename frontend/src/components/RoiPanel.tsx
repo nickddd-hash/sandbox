@@ -25,8 +25,8 @@ export function RoiPanel() {
       </div>
 
       <div className="flex items-center justify-between text-sm border-t border-slate-700 pt-2 mb-3">
-        <span className="text-slate-400">Живой менеджер</span>
-        <span className="text-slate-400">~40–60 ₽/мин</span>
+        <span className="text-slate-400">Живой менеджер (расчёт по зарплате)</span>
+        <span className="text-slate-400">~15 ₽/мин</span>
       </div>
 
       {showResult ? (
