@@ -8,7 +8,6 @@ import { RentalBoard } from './components/RentalBoard';
 import { VoiceWidget } from './components/VoiceWidget';
 import { ChatWidget } from './components/ChatWidget';
 import { RoiPanel } from './components/RoiPanel';
-import { ContactGate } from './components/ContactGate';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
 
@@ -18,13 +17,6 @@ export default function App() {
   const mode = useStore((s) => s.mode);
   const crmView = useStore((s) => s.niche.crmView);
   const toggleBehind = useStore((s) => s.toggleBehindScenes);
-  const submitContact = useStore((s) => s.submitContact);
-
-  // После заполнения гейта — сразу запускаем разговор на выбранном канале.
-  const confirmContact = (name: string, phone: string) => {
-    submitContact(name, phone);
-    void launch(useStore.getState().channel);
-  };
 
   return (
     <div className="min-h-full">
@@ -65,7 +57,6 @@ export default function App() {
         {crmView === 'rental' ? <RentalBoard /> : crmView === 'order' ? <OrderBoard /> : <Calendar />}
       </div>
 
-      <ContactGate onConfirm={confirmContact} />
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
       <BehindTheScenes />
     </div>
