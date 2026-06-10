@@ -52,6 +52,7 @@ export interface NicheConfig {
   roi: RoiParams;
   crmView: CrmView; // 'calendar' для услуг, 'order' для еды
   script: ScriptStep[];
+  disclaimer?: string; // дисклеймер, специфичный для ниши (показывается под хедером)
 }
 
 // Унифицированное tool-событие (и от Dasha, и от симулятора).

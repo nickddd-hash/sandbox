@@ -16,6 +16,7 @@ export default function App() {
   const transport = useStore((s) => s.transport);
   const mode = useStore((s) => s.mode);
   const crmView = useStore((s) => s.niche.crmView);
+  const nicheDisclaimer = useStore((s) => s.niche.disclaimer);
   const toggleBehind = useStore((s) => s.toggleBehindScenes);
 
   return (
@@ -43,6 +44,13 @@ export default function App() {
             <NicheSwitcher />
           </div>
         </div>
+        {nicheDisclaimer && (
+          <div className="border-t border-blue-500/30 bg-blue-500/10">
+            <div className="max-w-6xl mx-auto px-4 py-2.5">
+              <p className="text-sm text-blue-300">{nicheDisclaimer}</p>
+            </div>
+          </div>
+        )}
       </header>
 
       {transport === 'simulator' && mode === 'presenter' && (
