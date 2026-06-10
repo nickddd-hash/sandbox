@@ -26,14 +26,21 @@ export default function App() {
             Тестовый отдел продаж
             <span className="text-slate-500 font-normal"> · ИИ-консультант</span>
           </h1>
-          <div className="ml-auto flex items-center gap-3">
-            <NicheSwitcher />
+          <div className="ml-auto">
             <button
               onClick={toggleBehind}
               className="text-xs px-2 py-1 rounded border border-slate-600 text-slate-400 hover:text-slate-200"
             >
               под капотом
             </button>
+          </div>
+        </div>
+        <div className="border-t border-slate-800/50">
+          <div className="max-w-6xl mx-auto px-4 py-2 flex flex-col gap-2">
+            <p className="text-[11px] text-slate-500">
+              ⚠️ Демо-режим: данные и сценарии условные. Под каждый бизнес бот настраивается индивидуально — тон, стиль, услуги, цены, логика диалога.
+            </p>
+            <NicheSwitcher />
           </div>
         </div>
       </header>
