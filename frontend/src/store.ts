@@ -325,6 +325,8 @@ export const useStore = create<State>((set, get) => ({
           const card: Record<string, CardField> = { ...s.card };
           if (!s.card.date?.value) card.date = { value: resolveDate(`${appt.day} ${appt.time}`.trim()), updatedAt: now };
           if (appt.master && !s.card.master?.value) card.master = { value: appt.master, updatedAt: now };
+          if (appt.service && !s.card.service?.value) card.service = { value: appt.service, updatedAt: now };
+          if (appt.client && !s.card.name?.value) card.name = { value: appt.client, updatedAt: now };
           return { appointments: [...s.appointments, appt], card };
         });
         return;
