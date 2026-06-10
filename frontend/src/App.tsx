@@ -35,9 +35,9 @@ export default function App() {
             </button>
           </div>
         </div>
-        <div className="border-t border-slate-800/50">
-          <div className="max-w-6xl mx-auto px-4 py-2 flex flex-col gap-2">
-            <p className="text-[11px] text-slate-500">
+        <div className="border-t border-amber-500/30 bg-amber-500/10">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-3">
+            <p className="text-sm font-medium text-amber-300">
               ⚠️ Демо-режим: данные и сценарии условные. Под каждый бизнес бот настраивается индивидуально — тон, стиль, услуги, цены, логика диалога.
             </p>
             <NicheSwitcher />
