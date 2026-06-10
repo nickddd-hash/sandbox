@@ -10,6 +10,12 @@ function dayToIndex(day: string, todayIdx: number): number | null {
   const d = day.toLowerCase().trim();
   if (d.includes('сегодн')) return todayIdx;
   if (d.includes('завтра')) return (todayIdx + 1) % 7;
+  // ДД.ММ.ГГГГ → вычислить день недели
+  const dateMatch = d.match(/(\d{2})\.(\d{2})\.(\d{4})/);
+  if (dateMatch) {
+    const dt = new Date(Number(dateMatch[3]), Number(dateMatch[2]) - 1, Number(dateMatch[1]));
+    return (dt.getDay() + 6) % 7;
+  }
   const map: [string, number][] = [
     ['понедельник', 0], ['пн', 0],
     ['вторник', 1], ['вт', 1],

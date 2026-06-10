@@ -277,12 +277,11 @@ export const useStore = create<State>((set, get) => ({
               (x.client ?? '') === (appt.client ?? ''),
           );
           if (dup) return {};
-          // Синхронизируем карточку: «Запись» (и мастер) заполняются из брони.
-          const card: Record<string, CardField> = {
-            ...s.card,
-            date: { value: `${appt.day} ${appt.time}`.trim(), updatedAt: now },
-          };
-          if (appt.master) card.master = { value: appt.master, updatedAt: now };
+          // Синхронизируем карточку только если update_card ещё не записал поле
+          // (update_card — источник истины; он вызывается до book_appointment по сценарию).
+          const card: Record<string, CardField> = { ...s.card };
+          if (!s.card.date?.value) card.date = { value: `${appt.day} ${appt.time}`.trim(), updatedAt: now };
+          if (appt.master && !s.card.master?.value) card.master = { value: appt.master, updatedAt: now };
           return { appointments: [...s.appointments, appt], card };
         });
         return;
