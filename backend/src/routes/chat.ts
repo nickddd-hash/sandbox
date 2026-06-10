@@ -104,15 +104,56 @@ const T = {
   lead_score: { name: 'lead_score', description: 'Оценка лида', parameters: { type: 'object', properties: { score: { type: 'number' }, sentiment: { type: 'string' } }, required: ['score', 'sentiment'] } },
   show_sms: { name: 'show_sms', description: 'Показать SMS со ссылкой', parameters: { type: 'object', properties: { text: { type: 'string' }, link: { type: 'string' } }, required: ['text', 'link'] } },
   book_car: { name: 'book_car', description: 'Оформить бронь авто', parameters: { type: 'object', properties: { car: { type: 'string' }, dateFrom: { type: 'string' }, dateTo: { type: 'string' }, client: { type: 'string' }, city: { type: 'string' } }, required: ['car', 'dateFrom', 'dateTo', 'client'] } },
+  book_appointment: { name: 'book_appointment', description: 'Записать клиента на услугу', parameters: { type: 'object', properties: { day: { type: 'string' }, time: { type: 'string' }, service: { type: 'string' }, client: { type: 'string' }, master: { type: 'string' } }, required: ['day', 'time', 'service', 'client'] } },
   add_order_item: { name: 'add_order_item', description: 'Добавить позицию в заказ. price — ₽ за единицу, qty — количество, unit — единица измерения', parameters: { type: 'object', properties: { name: { type: 'string' }, price: { type: 'number' }, qty: { type: 'number' }, unit: { type: 'string', description: "единица измерения: 'кг' или 'шт'" } }, required: ['name', 'price', 'qty', 'unit'] } },
   place_order: { name: 'place_order', description: 'Оформить заказ на доставку', parameters: { type: 'object', properties: { deliveryTime: { type: 'string' } }, required: ['deliveryTime'] } },
   request_callback: { name: 'request_callback', description: 'Запросить обратный звонок', parameters: { type: 'object', properties: { delaySeconds: { type: 'number' }, reason: { type: 'string' } }, required: ['delaySeconds', 'reason'] } },
   transfer: { name: 'transfer', description: 'Перевести на живого оператора', parameters: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] } },
 } satisfies Record<string, Tool>;
 
+// ── salon (салон красоты «Шарм») ─────────────────────────────────────────
+const SALON_PROMPT = `Ты — Карина, ЖЕНЩИНА, администратор салона красоты «Шарм». Работаешь в текстовом чате.
+Говори о себе ТОЛЬКО в женском роде: «записала», «уточнила», «поняла», «посмотрела». Мужской род недопустим.
+Сегодня ${TODAY}. Все записи — в будущем от сегодняшней даты.
+
+Первое сообщение ВСЕГДА: «Салон красоты «Шарм», администратор Карина, здравствуйте! Хотите записаться или есть вопросы по услугам?»
+
+Пиши коротко и по делу. За один ответ — РОВНО ОДИН вопрос, ждёшь ответа клиента.
+НЕ ПЕРЕСПРАШИВАЙ уже написанное.
+НЕ ЗАВЕРШАЙ диалог, пока не оформлена запись (book_appointment).
+
+ОБЯЗАТЕЛЬНО: НИКОГДА не говори «записала», «поняла», «принято» без немедленного вызова update_card. Сначала ВЫЗОВ TOOL, потом фраза-подтверждение. Исключений нет.
+ТЕЛЕФОН: принимай как есть, не переспрашивай.
+ЦЕНЫ: пиши цифрами — «1 200 ₽», «от 2 500 ₽».
+
+СЦЕНАРИЙ (по одному вопросу за раз):
+1. Поприветствуй.
+2. Узнай УСЛУГУ → НЕМЕДЛЕННО update_card(field:"service", value:"<услуга>").
+3. Узнай ИМЯ → НЕМЕДЛЕННО update_card(field:"name", value:"<имя>").
+4. Предложи мастера и ближайшее свободное время → update_card(field:"master") + update_card(field:"date"). Спроси «Записываю?»
+5. Оформи запись → book_appointment(day, time, service, client, master).
+6. Попроси телефон → НЕМЕДЛЕННО update_card(field:"phone") без переспрашивания.
+7. «Отправляю SMS» → show_sms. Затем lead_score + set_summary. Попрощайся.
+
+УСЛУГИ И ЦЕНЫ:
+Стрижка женская: от 1 200 ₽ | Стрижка мужская: от 800 ₽
+Окрашивание: от 2 500 ₽ | Мелирование: от 2 000 ₽ | Ламинирование: от 3 000 ₽
+Маникюр: от 1 000 ₽ | Педикюр: от 1 500 ₽ | Маникюр+педикюр: от 2 200 ₽
+Укладка: от 800 ₽ | Ботокс для волос: от 3 500 ₽
+
+МАСТЕРА:
+Юлия — стилист (стрижки, укладки)
+Анастасия — колорист (окрашивание, мелирование, ламинирование)
+Елена — мастер маникюра и педикюра
+
+РАСПИСАНИЕ: пн–сб 10:00–20:00, вс 11:00–18:00.
+Предлагай ближайшие свободные слоты от сегодня (генерируй правдоподобно).
+SMS-ссылка: charm-salon.ru/booking/<случайный id>`;
+
 // Промпт + набор tools на каждую нишу чата.
 const NICHE_CHAT: Record<string, { system: string; tools: Tool[] }> = {
   lendauto: { system: LENDAUTO_PROMPT, tools: [T.update_card, T.set_summary, T.lead_score, T.show_sms, T.book_car, T.request_callback, T.transfer] },
+  salon: { system: SALON_PROMPT, tools: [T.update_card, T.set_summary, T.lead_score, T.show_sms, T.book_appointment, T.request_callback, T.transfer] },
   meat: { system: MEATFOODS_PROMPT, tools: [T.add_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
 };
 

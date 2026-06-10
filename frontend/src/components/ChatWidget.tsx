@@ -26,6 +26,12 @@ export function ChatWidget() {
     if (active && !loading) inputRef.current?.focus();
   }, [messages, loading, active]);
 
+  // При смене ниши — сбрасываем чат (история другого агента неуместна)
+  useEffect(() => {
+    setActive(false);
+    historyRef.current = [];
+  }, [nicheId]);
+
   const handleResponse = (reply: string, toolCalls: { id: string; name: string; args: Record<string, unknown> }[]) => {
     if (reply) {
       addMessage({ from: 'agent', text: reply });
