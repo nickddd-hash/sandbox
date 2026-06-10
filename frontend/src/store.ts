@@ -124,6 +124,48 @@ function emptyCard(): Record<string, CardField> {
   return {};
 }
 
+// Конвертирует относительные даты («завтра», «пятница», «послезавтра») в ДД.ММ.ГГГГ.
+// Если значение уже содержит реальную дату — возвращает как есть.
+function resolveDate(value: string): string {
+  if (/\d{2}\.\d{2}\.\d{4}/.test(value)) return value; // уже ДД.ММ.ГГГГ
+  const lower = value.toLowerCase().trim();
+  const timeMatch = value.match(/(\d{1,2})[:\.](\d{2})/);
+  const timeSuffix = timeMatch ? ` ${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}` : '';
+
+  const now = new Date();
+  const todayDow = now.getDay(); // 0=Вс
+  let target: Date | null = null;
+
+  if (lower.includes('послезавтра')) {
+    target = new Date(now.getTime() + 2 * 864e5);
+  } else if (lower.includes('завтра')) {
+    target = new Date(now.getTime() + 864e5);
+  } else if (lower.includes('сегодня')) {
+    target = new Date(now);
+  } else {
+    const map: [string, number][] = [
+      ['понедельник', 1], ['пн', 1],
+      ['вторник', 2], ['вт', 2],
+      ['среду', 3], ['среда', 3], ['ср', 3],
+      ['четверг', 4], ['чт', 4],
+      ['пятниц', 5], ['пт', 5],
+      ['суббот', 6], ['сб', 6],
+      ['воскрес', 0], ['вс', 0],
+    ];
+    for (const [name, dow] of map) {
+      if (lower.includes(name)) {
+        const diff = ((dow - todayDow + 7) % 7) || 7; // ближайший такой день, минимум завтра
+        target = new Date(now.getTime() + diff * 864e5);
+        break;
+      }
+    }
+  }
+
+  if (!target) return value;
+  const dateStr = target.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return `${dateStr}${timeSuffix}`;
+}
+
 export const useStore = create<State>((set, get) => ({
   niche: DEFAULT_NICHE,
   mode: 'public',
@@ -221,8 +263,9 @@ export const useStore = create<State>((set, get) => ({
     switch (e.name) {
       case 'update_card': {
         const field = String(e.args.field ?? '');
-        const value = String(e.args.value ?? '');
+        let value = String(e.args.value ?? '');
         if (!field) return;
+        if (field === 'date') value = resolveDate(value);
         set((s) => ({ card: { ...s.card, [field]: { value, updatedAt: now } } }));
         return;
       }
@@ -280,7 +323,7 @@ export const useStore = create<State>((set, get) => ({
           // Синхронизируем карточку только если update_card ещё не записал поле
           // (update_card — источник истины; он вызывается до book_appointment по сценарию).
           const card: Record<string, CardField> = { ...s.card };
-          if (!s.card.date?.value) card.date = { value: `${appt.day} ${appt.time}`.trim(), updatedAt: now };
+          if (!s.card.date?.value) card.date = { value: resolveDate(`${appt.day} ${appt.time}`.trim()), updatedAt: now };
           if (appt.master && !s.card.master?.value) card.master = { value: appt.master, updatedAt: now };
           return { appointments: [...s.appointments, appt], card };
         });
