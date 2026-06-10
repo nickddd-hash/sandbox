@@ -140,7 +140,7 @@ const salon: NicheConfig = {
     { key: 'phone', label: 'Телефон' },
     { key: 'service', label: 'Услуга' },
     { key: 'master', label: 'Мастер' },
-    { key: 'date', label: 'Запись' },
+    { key: 'date', label: 'Дата и время' },
   ],
   roi: {
     aiCostPerCall: 4,
