@@ -5,12 +5,10 @@ import type { Appointment } from '../store';
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const HOURS = Array.from({ length: 11 }, (_, i) => 10 + i); // 10:00–20:00
 
-// Понедельник-индекс (Пн=0) для строки дня агента.
 function dayToIndex(day: string, todayIdx: number): number | null {
   const d = day.toLowerCase().trim();
   if (d.includes('сегодн')) return todayIdx;
   if (d.includes('завтра')) return (todayIdx + 1) % 7;
-  // ДД.ММ.ГГГГ → вычислить день недели
   const dateMatch = d.match(/(\d{2})\.(\d{2})\.(\d{4})/);
   if (dateMatch) {
     const dt = new Date(Number(dateMatch[3]), Number(dateMatch[2]) - 1, Number(dateMatch[1]));
@@ -45,53 +43,32 @@ function thisMonday(): Date {
   return mon;
 }
 
-function ApptBlock({ a, onClick }: { a: Appointment; onClick: () => void }) {
-  const recent = Date.now() - a.at < 1500;
+function ApptModal({ a, onClose }: { a: Appointment; onClose: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className={`block w-full text-left rounded-md bg-emerald-600/80 hover:bg-emerald-500 text-white text-[10px] leading-tight px-1.5 py-1 mb-0.5 ${
-        recent ? 'animate-field-pop ring-1 ring-emerald-300' : ''
-      }`}
-      title={`${a.time} · ${a.service}${a.client ? ' · ' + a.client : ''}`}
-    >
-      <div className="font-semibold">{a.time}</div>
-      <div className="truncate">{a.service}</div>
-      {a.client && <div className="truncate opacity-80">{a.client}</div>}
-    </button>
-  );
-}
-
-// Модалка с деталями записи.
-function ApptDetails({ a, onClose }: { a: Appointment; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-sm rounded-2xl border border-slate-700 bg-panel p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-white">Детали записи</h3>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">✕</button>
+    <div className="hood-overlay" onClick={onClose}>
+      <div className="hood" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 360 }}>
+        <div className="hood-head">
+          <h3>Детали записи</h3>
+          <button className="hood-x" onClick={onClose}>✕</button>
         </div>
-        <dl className="space-y-2 text-sm">
-          <Row label="Услуга" value={a.service} />
-          {a.client && <Row label="Клиент" value={a.client} />}
-          {a.master && <Row label="Мастер" value={a.master} />}
-          <Row label="День" value={a.day} />
-          <Row label="Время" value={a.time} />
-          <Row label="Статус" value="Подтверждена" />
-        </dl>
+        <div className="hood-list">
+          {([
+            ['Услуга', a.service],
+            a.client ? ['Клиент', a.client] : null,
+            a.master ? ['Мастер / врач', a.master] : null,
+            ['День', a.day],
+            ['Время', a.time],
+            ['Статус', 'Подтверждена'],
+          ] as (string[] | null)[])
+            .filter((x): x is string[] => x !== null)
+            .map(([label, value]) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, padding: '6px 0', borderBottom: '1px solid var(--border-2)' }}>
+                <span style={{ color: 'var(--text-2)' }}>{label}</span>
+                <span style={{ fontWeight: 600, color: 'var(--text)' }}>{value}</span>
+              </div>
+            ))}
+        </div>
       </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between rounded-md bg-slate-800/50 px-3 py-2">
-      <dt className="text-slate-400">{label}</dt>
-      <dd className="text-white font-medium">{value}</dd>
     </div>
   );
 }
@@ -109,7 +86,6 @@ export function Calendar() {
     return d;
   });
 
-  // Раскладываем записи по ячейкам; нераспознанные — в список под сеткой.
   const cells = new Map<string, Appointment[]>();
   const unplaced: Appointment[] = [];
   for (const a of appointments) {
@@ -124,75 +100,83 @@ export function Calendar() {
   }
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-panel/60 p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-lg">🗓️</span>
-        <h2 className="text-base font-semibold text-slate-200">Календарь записей</h2>
-        <span className="text-xs text-slate-500">· {niche.label}</span>
-      </div>
+    <section className="card board">
+      <header className="board-head">
+        <h3 className="board-title">
+          <span className="board-ico cal-ico" />
+          Календарь записей
+        </h3>
+        <span className="board-sub">{niche.label}</span>
+      </header>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-[640px]">
-          {/* Заголовок дней */}
-          <div className="grid grid-cols-[48px_repeat(7,1fr)] gap-1 mb-1">
-            <div />
-            {days.map((d, i) => (
-              <div
-                key={i}
-                className={`text-center text-xs py-1 rounded ${
-                  i === todayIdx ? 'bg-accent/30 text-white' : 'text-slate-400'
-                }`}
-              >
-                {WEEKDAYS[i]} {d.getDate()}
-              </div>
-            ))}
-          </div>
+      <div style={{ overflowX: 'auto' }}>
+        <div
+          className="cal"
+          style={{ gridTemplateColumns: `48px repeat(7, 1fr)` }}
+        >
+          <div />
+          {days.map((d, i) => (
+            <div
+              key={i}
+              className={'cal-dayhead' + (i === todayIdx ? ' cal-dayhead--today' : '')}
+            >
+              <span className="cal-dow">{WEEKDAYS[i]}</span>
+              <span className="cal-dnum">{d.getDate()}</span>
+            </div>
+          ))}
 
-          {/* Часовые строки */}
           {HOURS.map((h) => (
-            <div key={h} className="grid grid-cols-[48px_repeat(7,1fr)] gap-1 mb-1">
-              <div className="text-[11px] text-slate-500 text-right pr-1 pt-1">{h}:00</div>
+            <>
+              <div key={`t-${h}`} className="cal-time">{h}:00</div>
               {days.map((_, col) => {
                 const items = cells.get(`${col}-${h}`) ?? [];
+                const latest = items[items.length - 1];
+                const isToday = col === todayIdx;
                 return (
                   <div
-                    key={col}
-                    className={`min-h-[34px] rounded border border-slate-800 ${
-                      col === todayIdx ? 'bg-slate-800/40' : 'bg-slate-800/20'
-                    } p-0.5`}
+                    key={`${col}-${h}`}
+                    className={'cal-cell' + (isToday ? ' cal-cell--today' : '')}
                   >
-                    {items.map((a) => (
-                      <ApptBlock key={a.id} a={a} onClick={() => setSelected(a)} />
-                    ))}
+                    {latest && (
+                      <div
+                        className={'event event--' + (Date.now() - latest.at < 1500 ? 'new' : 'busy')}
+                        onClick={() => setSelected(latest)}
+                        title={`${latest.time} · ${latest.service}${latest.client ? ' · ' + latest.client : ''}`}
+                      >
+                        <span className="event-name">{latest.time} {latest.service}</span>
+                        {latest.client && <span className="event-sub">{latest.client}</span>}
+                      </div>
+                    )}
                   </div>
                 );
               })}
-            </div>
+            </>
           ))}
         </div>
       </div>
 
       {unplaced.length > 0 && (
-        <div className="mt-3 border-t border-slate-700 pt-2">
-          <div className="text-[11px] uppercase tracking-wide text-slate-500 mb-1">Записи</div>
+        <div style={{ marginTop: 12, borderTop: '1px solid var(--border-2)', paddingTop: 10 }}>
+          <div className="board-sub" style={{ marginBottom: 6, textTransform: 'uppercase', fontSize: 11, letterSpacing: '.05em', fontWeight: 700 }}>
+            Записи (вне сетки)
+          </div>
           {unplaced.map((a) => (
             <button
               key={a.id}
               onClick={() => setSelected(a)}
-              className="block w-full text-left text-sm text-slate-300 hover:text-white"
+              style={{ display: 'block', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-2)', padding: '4px 0' }}
             >
-              {a.day} {a.time} — {a.service}
-              {a.client ? ` · ${a.client}` : ''}
+              {a.day} {a.time} — {a.service}{a.client ? ` · ${a.client}` : ''}
             </button>
           ))}
         </div>
       )}
 
       {appointments.length === 0 && (
-        <p className="text-xs text-slate-600 mt-2">Записи появятся здесь по ходу разговора.</p>
+        <p className="board-foot">Записи появятся здесь по ходу разговора.</p>
       )}
 
-      {selected && <ApptDetails a={selected} onClose={() => setSelected(null)} />}
+      {selected && <ApptModal a={selected} onClose={() => setSelected(null)} />}
     </section>
   );
 }

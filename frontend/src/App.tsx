@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from './store';
 import { useSandbox } from './useSandbox';
 import { NicheSwitcher } from './components/NicheSwitcher';
@@ -5,82 +6,118 @@ import { CrmBoard } from './components/CrmBoard';
 import { Calendar } from './components/Calendar';
 import { OrderBoard } from './components/OrderBoard';
 import { RentalBoard } from './components/RentalBoard';
-import { VoiceWidget } from './components/VoiceWidget';
-import { ChatWidget } from './components/ChatWidget';
+import { InteractionPanel } from './components/InteractionPanel';
 import { RoiPanel } from './components/RoiPanel';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
 
+const HOOD_ITEMS: [string, string][] = [
+  ['Речь → текст → речь', 'Распознавание и синтез голоса в реальном времени, без задержек.'],
+  ['Извлечение сущностей', 'Имя, услуга, дата, телефон вытаскиваются из реплик и пишутся в CRM.'],
+  ['Интеграции', 'Запись в календарь, доску аренды, отправка SMS-подтверждения.'],
+  ['Авто-саммари и скоринг', 'После разговора — суть, статус и оценка лида одним абзацем.'],
+  ['Под ваш бизнес', 'Тон, услуги, цены и логика диалога настраиваются индивидуально.'],
+];
+
+function UnderHoodModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  return (
+    <div className="hood-overlay" onClick={onClose}>
+      <div className="hood" onClick={(e) => e.stopPropagation()}>
+        <div className="hood-head">
+          <h3>Что под капотом</h3>
+          <button className="hood-x" onClick={onClose}>✕</button>
+        </div>
+        <p className="hood-lede">
+          Это не статичный макет — за демо стоит тот же конвейер, что работает у клиентов.
+        </p>
+        <div className="hood-list">
+          {HOOD_ITEMS.map(([h, d], i) => (
+            <div key={i} className="hood-item">
+              <span className="hood-num">{i + 1}</span>
+              <div>
+                <div className="hood-h">{h}</div>
+                <div className="hood-d">{d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { launch, stop } = useSandbox();
-  const transport = useStore((s) => s.transport);
-  const mode = useStore((s) => s.mode);
   const crmView = useStore((s) => s.niche.crmView);
   const nicheDisclaimer = useStore((s) => s.niche.disclaimer);
-  const toggleBehind = useStore((s) => s.toggleBehindScenes);
+  const [hoodOpen, setHoodOpen] = useState(false);
 
   return (
-    <div className="min-h-full">
-      <header className="border-b border-slate-800 bg-panel/40">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
-          <h1 className="text-base font-semibold text-white">
-            Тестовый отдел продаж
-            <span className="text-slate-500 font-normal"> · ИИ-консультант</span>
-          </h1>
-          <div className="ml-auto">
-            <button
-              onClick={toggleBehind}
-              className="text-xs px-2 py-1 rounded border border-slate-600 text-slate-400 hover:text-slate-200"
-            >
-              под капотом
-            </button>
+    <div className="app" data-theme="trust">
+      <header className="header">
+        <div className="brand">
+          <div className="brand-mark">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="3.2" fill="#fff" />
+              <circle cx="10" cy="10" r="6.4" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.4" />
+            </svg>
+          </div>
+          <div>
+            <div className="brand-name">Тестовый отдел продаж</div>
+            <div className="brand-sub">ИИ-консультант · демо-песочница</div>
           </div>
         </div>
-        <div className="border-t border-amber-500/30 bg-amber-500/10">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-3">
-            <p className="text-sm font-medium text-amber-300">
-              ⚠️ Демо-режим: данные и сценарии условные. Под каждый бизнес бот настраивается индивидуально — тон, стиль, услуги, цены, логика диалога.
-            </p>
-            <NicheSwitcher />
-          </div>
-        </div>
-        {nicheDisclaimer && (
-          <div className="border-t border-blue-500/30 bg-blue-500/10">
-            <div className="max-w-6xl mx-auto px-4 py-2.5">
-              <p className="text-sm text-blue-300">{nicheDisclaimer}</p>
-            </div>
-          </div>
-        )}
+        <button className="hood-btn" onClick={() => setHoodOpen(true)}>под капотом</button>
       </header>
 
-      {transport === 'simulator' && mode === 'presenter' && (
-        <div className="bg-amber-950/40 border-b border-amber-800/40 text-amber-200 text-xs text-center py-1.5">
-          Демо-сценарий · презентер
+      <div className="niche-wrap">
+        <NicheSwitcher />
+      </div>
+
+      <div className="demo-banner">
+        <span className="demo-ico">i</span>
+        <span>
+          <b>Демо-режим.</b> Данные и сценарии условные. Под каждый бизнес бот настраивается
+          индивидуально — тон, услуги, цены и логика диалога.
+        </span>
+      </div>
+
+      {nicheDisclaimer && (
+        <div className="demo-banner">
+          <span className="demo-ico">i</span>
+          <span>{nicheDisclaimer}</span>
         </div>
       )}
 
-      <main className="max-w-6xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-        <div className="flex flex-col gap-6">
+      <main className="layout">
+        <div>
           <CrmBoard />
-          {/* Блок заказа — сразу под карточкой лида, чтобы был на виду */}
-          {crmView === 'order' && <OrderBoard />}
+          {crmView === 'order' && (
+            <div style={{ marginTop: 'var(--gap)' }}>
+              <OrderBoard />
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-4">
-          <VoiceWidget onLaunch={() => void launch('voice')} onStop={stop} />
-          <ChatWidget />
+        <div className="col--right">
+          <InteractionPanel onLaunch={() => void launch('voice')} onStop={stop} />
           <RoiPanel />
         </div>
       </main>
 
-      {/* Широкие доски для остальных ниш */}
       {(crmView === 'rental' || crmView === 'calendar') && (
-        <div className="max-w-6xl mx-auto px-4 pb-8">
+        <div className="board-wrap">
           {crmView === 'rental' ? <RentalBoard /> : <Calendar />}
         </div>
       )}
 
+      <footer className="page-foot">
+        Тестовый отдел продаж — интерактивная демонстрация ИИ-автоматизации продаж.
+      </footer>
+
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
       <BehindTheScenes />
+      <UnderHoodModal open={hoodOpen} onClose={() => setHoodOpen(false)} />
     </div>
   );
 }
