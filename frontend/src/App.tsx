@@ -112,7 +112,18 @@ export default function App() {
       )}
 
       <footer className="page-foot">
-        Тестовый отдел продаж — интерактивная демонстрация ИИ-автоматизации продаж.
+        <div className="foot-cta">
+          <span>Хотите такого ИИ-бота под свой бизнес? Внедрим под ключ.</span>
+          <a className="foot-tg" href="https://t.me/nickddd" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21.94 4.6 18.9 19.2c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.46.46-.94.46l.34-4.78 8.7-7.86c.38-.34-.08-.53-.59-.19L6.7 13.1l-4.64-1.45c-1.01-.32-1.03-1.01.21-1.5l18.13-6.99c.84-.31 1.58.19 1.3 1.44z" />
+            </svg>
+            Telegram: @nickddd
+          </a>
+        </div>
+        <div className="foot-copy">
+          Тестовый отдел продаж — интерактивная демонстрация ИИ-автоматизации продаж.
+        </div>
       </footer>
 
       <IncomingCallOverlay onAccept={() => void launch('voice')} />

@@ -406,7 +406,22 @@
 .hood-d { font-size: 13px; color: var(--text-2); line-height: 1.45; margin-top: 2px; }
 
 /* ───────── FOOTER ───────── */
-.page-foot { margin-top: 26px; text-align: center; font-size: 12px; color: var(--text-3); }
+.page-foot { margin-top: 26px; text-align: center; }
+.foot-cta {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 14px; margin-bottom: 12px;
+  font-size: 14px; font-weight: 500; color: var(--text-2);
+}
+.foot-tg {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 10px;
+  background: #229ED9; color: #fff; font-weight: 600; font-size: 13px;
+  text-decoration: none; transition: background .15s, transform .15s;
+  box-shadow: 0 4px 12px -3px color-mix(in srgb, #229ED9 55%, transparent);
+}
+.foot-tg:hover { background: #1C8FC4; transform: translateY(-1px); }
+.foot-tg svg { width: 15px; height: 15px; fill: currentColor; }
+.foot-copy { font-size: 12px; color: var(--text-3); }
 
 /* ───────── RESPONSIVE ───────── */
 @media (max-width: 940px) {
