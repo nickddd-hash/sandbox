@@ -274,7 +274,50 @@ const lendauto: NicheConfig = {
   ],
 };
 
-export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food, lendauto };
+const flowers: NicheConfig = {
+  id: 'flowers',
+  label: 'Магазин цветов',
+  emoji: '💐',
+  agentName: 'Алина, флорист',
+  fields: [
+    { key: 'name', label: 'Имя' },
+    { key: 'phone', label: 'Телефон' },
+    { key: 'address', label: 'Адрес доставки' },
+    { key: 'occasion', label: 'Повод' },
+  ],
+  roi: {
+    aiCostPerCall: 4,
+    humanCostPerCall: 45,
+    missedCallValue: 3000, // упущенный заказ букета
+    defaultCallsPerDay: 40,
+    defaultManagerSalary: 50000,
+  },
+  crmView: 'order',
+  script: [
+    { at: 600, say: { from: 'agent', text: 'Цветочная мастерская «Флёр», флорист Алина. Здравствуйте! Что хотите подобрать?' } },
+    { at: 2600, say: { from: 'user', text: 'Нужен букет на день рождения, что-нибудь яркое.' } },
+    { at: 3200, tool: { name: 'update_card', args: { field: 'occasion', value: 'День рождения' } } },
+    { at: 4000, say: { from: 'agent', text: 'Отлично! Есть пионовый букет за 4500 ₽ или 25 роз за 3250 ₽. Что ближе?' } },
+    { at: 5800, say: { from: 'user', text: 'Давайте 25 красных роз.' } },
+    { at: 6400, tool: { name: 'add_order_item', args: { name: 'Розы красные 60 см', price: 130, qty: 25, unit: 'шт' } } },
+    { at: 7200, say: { from: 'agent', text: 'Записала 25 роз — 3250 ₽, доставка бесплатно. Куда доставить?' } },
+    { at: 8600, say: { from: 'user', text: 'Улица Пушкина 12, квартира 5.' } },
+    { at: 9000, tool: { name: 'update_card', args: { field: 'address', value: 'ул. Пушкина 12, кв. 5' } } },
+    { at: 9800, say: { from: 'agent', text: 'На какое время доставка, и как вас зовут с телефоном?' } },
+    { at: 11200, say: { from: 'user', text: 'Сегодня к 17:00. Олег, 89031234567.' } },
+    { at: 11700, tool: { name: 'update_card', args: { field: 'name', value: 'Олег' } } },
+    { at: 12100, tool: { name: 'update_card', args: { field: 'phone', value: '+7 903 123-45-67' } } },
+    { at: 12800, say: { from: 'agent', text: 'Секунду, оформляю заказ…' } },
+    { at: 13600, tool: { name: 'place_order', args: { deliveryTime: 'сегодня к 17:00' } } },
+    { at: 14200, say: { from: 'agent', text: 'Готово! 25 роз, 3250 ₽, доставка бесплатно. Отправляю подтверждение в SMS.' } },
+    { at: 14800, tool: { name: 'show_sms', args: { text: 'Заказ «Флёр»: 25 роз, 3250 ₽, доставка сегодня к 17:00:', link: 'fleur.ru/order/2231' } } },
+    { at: 15600, tool: { name: 'lead_score', args: { score: 86, sentiment: 'позитивный' } } },
+    { at: 16400, tool: { name: 'set_summary', args: { text: 'Олег — 25 красных роз (3250 ₽) на день рождения, доставка сегодня к 17:00, ул. Пушкина 12-5. Отправлено SMS.' } } },
+    { at: 17200, say: { from: 'agent', text: 'Заказ принят! Доставим сегодня к 17:00. Спасибо, что выбрали «Флёр»!' } },
+  ],
+};
+
+export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food, lendauto, flowers };
 // Прокат авто — первый (демо для клиента), салон — дефолт для живого Dasha.
-export const NICHE_LIST: NicheConfig[] = [lendauto, salon, food, dental, auto, meat];
+export const NICHE_LIST: NicheConfig[] = [lendauto, salon, food, flowers, dental, auto, meat];
 export const DEFAULT_NICHE: NicheConfig = lendauto;
