@@ -318,7 +318,52 @@ const flowers: NicheConfig = {
   ],
 };
 
-export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food, lendauto, flowers };
+const realty: NicheConfig = {
+  id: 'realty',
+  label: 'Недвижимость',
+  emoji: '🏠',
+  agentName: 'Светлана, риэлтор',
+  disclaimer: '🏢 Демо-режим: показан небольшой срез объектов. В реальном агентстве бот подключается к базе объектов (CRM/MLS) и подбирает подходящее из тысяч вариантов по параметрам клиента.',
+  fields: [
+    { key: 'name', label: 'Клиент' },
+    { key: 'phone', label: 'Телефон' },
+    { key: 'budget', label: 'Бюджет' },
+    { key: 'service', label: 'Объект' },
+    { key: 'master', label: 'Риэлтор' },
+    { key: 'date', label: 'Дата осмотра' },
+  ],
+  roi: {
+    aiCostPerCall: 5,
+    humanCostPerCall: 70,
+    missedCallValue: 50000, // упущенный лид на покупку
+    defaultCallsPerDay: 20,
+    defaultManagerSalary: 80000,
+  },
+  crmView: 'calendar',
+  script: [
+    { at: 600, say: { from: 'agent', text: 'Агентство недвижимости «Новосёл», риэлтор Светлана. Здравствуйте! Что подбираем?' } },
+    { at: 2600, say: { from: 'user', text: 'Ищу двушку в центре, бюджет до 9 миллионов.' } },
+    { at: 3200, tool: { name: 'update_card', args: { field: 'budget', value: 'до 9 млн ₽' } } },
+    { at: 4200, say: { from: 'agent', text: 'Секунду, подбираю по базе…' } },
+    { at: 5600, say: { from: 'agent', text: 'Есть два варианта: 2-к на проспекте Мира 8, 54 м², 8,5 млн; и 2-к на Садовой 3, 48 м², 7,2 млн. Какой посмотрим?' } },
+    { at: 7400, say: { from: 'user', text: 'Давайте на Мира 8.' } },
+    { at: 8000, say: { from: 'agent', text: 'Отлично. Как вас зовут?' } },
+    { at: 9000, say: { from: 'user', text: 'Игорь.' } },
+    { at: 9400, tool: { name: 'update_card', args: { field: 'name', value: 'Игорь' } } },
+    { at: 10000, say: { from: 'agent', text: 'Игорь, когда удобно на осмотр?' } },
+    { at: 11200, say: { from: 'user', text: 'Завтра вечером. Телефон 89031234567.' } },
+    { at: 11700, tool: { name: 'update_card', args: { field: 'phone', value: '+7 903 123-45-67' } } },
+    { at: 12300, say: { from: 'agent', text: 'Секунду, согласую время осмотра…' } },
+    { at: 13600, tool: { name: 'book_appointment', args: { day: 'завтра', time: '18:00', service: '2-к, пр. Мира 8', client: 'Игорь', master: 'Риэлтор Светлана' } } },
+    { at: 14200, say: { from: 'agent', text: 'Записала осмотр: 2-к на Мира 8, завтра в 18:00. Отправляю детали в SMS.' } },
+    { at: 14800, tool: { name: 'show_sms', args: { text: 'Осмотр: 2-к пр. Мира 8, завтра 18:00, риэлтор Светлана:', link: 'novosel.ru/view/5512' } } },
+    { at: 15600, tool: { name: 'lead_score', args: { score: 84, sentiment: 'тёплый' } } },
+    { at: 16400, tool: { name: 'set_summary', args: { text: 'Игорь — ищет 2-к в центре до 9 млн. Записан на осмотр 2-к пр. Мира 8 (8,5 млн) завтра в 18:00, риэлтор Светлана. Отправлено SMS.' } } },
+    { at: 17200, say: { from: 'agent', text: 'Осмотр назначен на завтра 18:00. До встречи на Мира 8!' } },
+  ],
+};
+
+export const NICHES: Record<string, NicheConfig> = { dental, auto, meat, salon, food, lendauto, flowers, realty };
 // Прокат авто — первый (демо для клиента), салон — дефолт для живого Dasha.
-export const NICHE_LIST: NicheConfig[] = [lendauto, salon, food, flowers, dental, auto, meat];
+export const NICHE_LIST: NicheConfig[] = [lendauto, salon, food, flowers, realty, dental, auto, meat];
 export const DEFAULT_NICHE: NicheConfig = lendauto;

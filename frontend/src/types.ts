@@ -1,4 +1,4 @@
-export type Niche = 'dental' | 'auto' | 'meat' | 'salon' | 'food' | 'lendauto' | 'flowers';
+export type Niche = 'dental' | 'auto' | 'meat' | 'salon' | 'food' | 'lendauto' | 'flowers' | 'realty';
 
 // Вид CRM-витрины: календарь записей (услуги), корзина заказа (еда), сетка аренды авто.
 export type CrmView = 'calendar' | 'order' | 'rental';
