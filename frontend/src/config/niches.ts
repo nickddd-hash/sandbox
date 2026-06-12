@@ -280,10 +280,10 @@ const flowers: NicheConfig = {
   emoji: '💐',
   agentName: 'Алина, флорист',
   fields: [
-    { key: 'name', label: 'Имя' },
+    { key: 'name', label: 'Заказчик' },
     { key: 'phone', label: 'Телефон' },
     { key: 'address', label: 'Адрес доставки' },
-    { key: 'occasion', label: 'Повод' },
+    { key: 'deliveryTime', label: 'Дата и время' },
   ],
   roi: {
     aiCostPerCall: 4,
@@ -296,7 +296,6 @@ const flowers: NicheConfig = {
   script: [
     { at: 600, say: { from: 'agent', text: 'Цветочная мастерская «Флёр», флорист Алина. Здравствуйте! Что хотите подобрать?' } },
     { at: 2600, say: { from: 'user', text: 'Нужен букет на день рождения, что-нибудь яркое.' } },
-    { at: 3200, tool: { name: 'update_card', args: { field: 'occasion', value: 'День рождения' } } },
     { at: 4000, say: { from: 'agent', text: 'Отлично! Есть пионовый букет за 4500 ₽ или 25 роз за 3250 ₽. Что ближе?' } },
     { at: 5800, say: { from: 'user', text: 'Давайте 25 красных роз.' } },
     { at: 6400, tool: { name: 'add_order_item', args: { name: 'Розы красные 60 см', price: 130, qty: 25, unit: 'шт' } } },
@@ -306,6 +305,7 @@ const flowers: NicheConfig = {
     { at: 9000, tool: { name: 'update_card', args: { field: 'address', value: 'ул. Пушкина 12, кв. 5' } } },
     { at: 9800, say: { from: 'agent', text: 'На какое время доставка, и как вас зовут с телефоном?' } },
     { at: 11200, say: { from: 'user', text: 'Сегодня к 17:00. Олег, 89031234567.' } },
+    { at: 11500, tool: { name: 'update_card', args: { field: 'deliveryTime', value: 'сегодня к 17:00' } } },
     { at: 11700, tool: { name: 'update_card', args: { field: 'name', value: 'Олег' } } },
     { at: 12100, tool: { name: 'update_card', args: { field: 'phone', value: '+7 903 123-45-67' } } },
     { at: 12800, say: { from: 'agent', text: 'Секунду, оформляю заказ…' } },
