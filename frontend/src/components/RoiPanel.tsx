@@ -11,6 +11,9 @@ export function RoiPanel() {
   const channel = useStore((s) => s.channel);
   const lastCallSec = useStore((s) => s.lastCallSec);
 
+  // Поминутная экономика — только для голоса. В текстовом чате тариф «за минуту» не показываем.
+  if (channel === 'chat') return null;
+
   const showResult =
     status === 'ended' && channel === 'voice' && lastCallSec !== null && lastCallSec > 0;
   const cost = lastCallSec ? (lastCallSec / 60) * RATE_PER_MIN : 0;

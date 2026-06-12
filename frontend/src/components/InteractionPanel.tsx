@@ -44,6 +44,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
   const channel = useStore((s) => s.channel);
   const agentName = useStore((s) => s.niche.agentName);
   const setLastCallSec = useStore((s) => s.setLastCallSec);
+  const setChannel = useStore((s) => s.setChannel);
   const voiceActive = (status === 'connecting' || status === 'live') && channel === 'voice';
   const [sec, setSec] = useState(0);
 
@@ -166,14 +167,14 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
         <div className="tabs" role="tablist">
           <button
             className={'tab' + (tab === 'call' ? ' tab--on' : '')}
-            onClick={() => !anyActive && setTab('call')}
+            onClick={() => { if (!anyActive) { setTab('call'); setChannel('voice'); } }}
             disabled={anyActive}
           >
             <PhoneIcon /> Звонок
           </button>
           <button
             className={'tab' + (tab === 'chat' ? ' tab--on' : '')}
-            onClick={() => !anyActive && setTab('chat')}
+            onClick={() => { if (!anyActive) { setTab('chat'); setChannel('chat'); } }}
             disabled={anyActive}
           >
             <ChatIcon /> Чат
