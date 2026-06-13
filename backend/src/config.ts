@@ -45,6 +45,11 @@ export const config = {
     model: str('HUBRIS_MODEL', 'google/gemini-2.5-flash'),
   },
 
+  bitrix: {
+    // Входящий вебхук Bitrix24: https://<portal>.bitrix24.ru/rest/<user>/<code>/
+    webhookUrl: str('BITRIX_WEBHOOK_URL'),
+  },
+
   voximplant: {
     accountId: str('VOXIMPLANT_ACCOUNT_ID'),
     apiKey: str('VOXIMPLANT_API_KEY'),
@@ -77,3 +82,6 @@ export const voxEnabled = (): boolean =>
 // Настроен ли Supabase для записи лидов.
 export const supabaseEnabled = (): boolean =>
   Boolean(config.supabase.url && config.supabase.serviceKey);
+
+// Настроен ли входящий вебхук Bitrix24 для отправки лидов в CRM.
+export const bitrixEnabled = (): boolean => Boolean(config.bitrix.webhookUrl);

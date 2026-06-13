@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { isNiche } from '../types.js';
 import type { LeadPayload } from '../types.js';
 import { saveLead } from '../services/supabase.js';
+import { pushLead } from '../services/bitrix.js';
 
 export async function leadRoutes(app: FastifyInstance): Promise<void> {
   app.post('/api/lead', async (req, reply) => {
@@ -20,6 +21,9 @@ export async function leadRoutes(app: FastifyInstance): Promise<void> {
       score: typeof b.score === 'number' ? b.score : undefined,
       sentiment: typeof b.sentiment === 'string' ? b.sentiment.slice(0, 50) : undefined,
     };
+
+    // Отправка в Bitrix24 — best-effort: не должна ронять запрос.
+    pushLead(lead).catch((err) => req.log.error({ err }, 'Bitrix: не удалось создать лид'));
 
     try {
       const result = await saveLead(lead);
