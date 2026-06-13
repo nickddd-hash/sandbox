@@ -6,6 +6,7 @@ import { CrmBoard } from './components/CrmBoard';
 import { Calendar } from './components/Calendar';
 import { OrderBoard } from './components/OrderBoard';
 import { RentalBoard } from './components/RentalBoard';
+import { NaryadPanel } from './components/NaryadPanel';
 import { InteractionPanel } from './components/InteractionPanel';
 import { RoiPanel } from './components/RoiPanel';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
@@ -52,6 +53,7 @@ export default function App() {
   const crmView = useStore((s) => s.niche.crmView);
   const nicheDisclaimer = useStore((s) => s.niche.disclaimer);
   const [hoodOpen, setHoodOpen] = useState(false);
+  const [contactsOpen, setContactsOpen] = useState(false);
 
   return (
     <div className="app" data-theme="trust">
@@ -94,9 +96,14 @@ export default function App() {
         <div>
           <CrmBoard />
           {crmView === 'order' && (
-            <div style={{ marginTop: 'var(--gap)' }}>
-              <OrderBoard />
-            </div>
+            <>
+              <div style={{ marginTop: 'var(--gap)' }}>
+                <OrderBoard />
+              </div>
+              <div style={{ marginTop: 'var(--gap)' }}>
+                <NaryadPanel />
+              </div>
+            </>
           )}
         </div>
         <div className="col--right">
@@ -108,18 +115,32 @@ export default function App() {
       {(crmView === 'rental' || crmView === 'calendar') && (
         <div className="board-wrap">
           {crmView === 'rental' ? <RentalBoard /> : <Calendar />}
+          <div style={{ marginTop: 'var(--gap)' }}>
+            <NaryadPanel />
+          </div>
         </div>
       )}
 
       <footer className="page-foot">
         <div className="foot-cta">
-          <span>Хотите такого ИИ-бота под свой бизнес? Внедрим под ключ.</span>
-          <a className="foot-tg" href="https://t.me/nickddd" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21.94 4.6 18.9 19.2c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.46.46-.94.46l.34-4.78 8.7-7.86c.38-.34-.08-.53-.59-.19L6.7 13.1l-4.64-1.45c-1.01-.32-1.03-1.01.21-1.5l18.13-6.99c.84-.31 1.58.19 1.3 1.44z" />
-            </svg>
-            Telegram: @nickddd
-          </a>
+          <span>Хотите такую систему под свой бизнес? Внедрим под ключ.</span>
+          {contactsOpen ? (
+            <div className="foot-contacts">
+              <a className="foot-tg" href="https://t.me/nickddd" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M21.94 4.6 18.9 19.2c-.23 1.02-.84 1.27-1.7.79l-4.7-3.46-2.27 2.18c-.25.25-.46.46-.94.46l.34-4.78 8.7-7.86c.38-.34-.08-.53-.59-.19L6.7 13.1l-4.64-1.45c-1.01-.32-1.03-1.01.21-1.5l18.13-6.99c.84-.31 1.58.19 1.3 1.44z" />
+                </svg>
+                Telegram: @nickddd
+              </a>
+              <a className="foot-tg foot-max" href="tel:+79265383933">
+                Max: +7 926 538-39-33
+              </a>
+            </div>
+          ) : (
+            <button type="button" className="foot-tg" onClick={() => setContactsOpen(true)}>
+              Связаться
+            </button>
+          )}
         </div>
         <div className="foot-copy">
           Тестовый отдел продаж — интерактивная демонстрация ИИ-автоматизации продаж.
