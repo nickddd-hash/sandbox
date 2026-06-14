@@ -86,10 +86,10 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     stopPoll();
     let attempts = 0;
     pollRef.current = window.setInterval(async () => {
-      if (++attempts > 60) return stopPoll(); // ~3 минуты и хватит
+      if (++attempts > 150) return stopPoll(); // ~12 минут, хватает на ручную оплату
       try {
         const { status } = await getPaymentStatus(id);
-        if (status === 'succeeded') {
+        if (status === 'succeeded' || status === 'waiting_for_capture') {
           stopPoll();
           addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' });
         } else if (status === 'canceled') {
@@ -98,7 +98,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       } catch {
         /* временную ошибку опроса игнорируем */
       }
-    }, 3000);
+    }, 5000);
   };
   // Чистим опрос при размонтировании.
   useEffect(() => stopPoll, []);
