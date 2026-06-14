@@ -174,6 +174,10 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     if (closed && !toolCalls.some((t) => t.name === 'set_summary')) {
       applyTool({ id: 'sum-' + Date.now(), name: 'set_summary', args: { text: buildSummary() } } as ToolEvent);
     }
+    if (closed && !toolCalls.some((t) => t.name === 'lead_score')) {
+      // Оформленный заказ/запись — горячий лид; страхуем, если модель не оценила.
+      applyTool({ id: 'score-' + Date.now(), name: 'lead_score', args: { score: 88, sentiment: 'горячий' } } as ToolEvent);
+    }
     // Ссылка должна оказаться в самом чате (мы в текстовом канале).
     if (toolCalls.some((t) => t.name === 'place_order') && useStore.getState().niche.crmView === 'order') {
       // ЮKassa: реальная ссылка на оплату под сумму корзины (источник истины UI).
