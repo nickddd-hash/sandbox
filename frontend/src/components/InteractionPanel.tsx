@@ -74,6 +74,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<number | null>(null);
+  const pendingPayRef = useRef<string | null>(null);
 
   const stopPoll = () => {
     if (pollRef.current) {
@@ -81,27 +82,48 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       pollRef.current = null;
     }
   };
-  // Опрос статуса платежа ЮKassa: как только succeeded — сообщение в чат.
+  // Разовая проверка статуса платежа; при успехе — сообщение в чат.
+  const checkPayment = async (id: string): Promise<boolean> => {
+    try {
+      const { status } = await getPaymentStatus(id);
+      if (status === 'succeeded' || status === 'waiting_for_capture') {
+        stopPoll();
+        pendingPayRef.current = null;
+        addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' });
+        return true;
+      }
+      if (status === 'canceled') {
+        stopPoll();
+        pendingPayRef.current = null;
+      }
+    } catch {
+      /* временную ошибку опроса игнорируем */
+    }
+    return false;
+  };
+  // Опрос статуса платежа ЮKassa, пока succeeded/canceled или таймаут.
   const pollPayment = (id: string) => {
     stopPoll();
+    pendingPayRef.current = id;
     let attempts = 0;
-    pollRef.current = window.setInterval(async () => {
-      if (++attempts > 150) return stopPoll(); // ~12 минут, хватает на ручную оплату
-      try {
-        const { status } = await getPaymentStatus(id);
-        if (status === 'succeeded' || status === 'waiting_for_capture') {
-          stopPoll();
-          addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' });
-        } else if (status === 'canceled') {
-          stopPoll();
-        }
-      } catch {
-        /* временную ошибку опроса игнорируем */
-      }
+    pollRef.current = window.setInterval(() => {
+      if (++attempts > 150 || !pendingPayRef.current) return stopPoll();
+      void checkPayment(pendingPayRef.current);
     }, 5000);
   };
-  // Чистим опрос при размонтировании.
-  useEffect(() => stopPoll, []);
+  // Перепроверяем при возврате на вкладку — фоновый таймер браузер «замораживает».
+  useEffect(() => {
+    const onFocus = () => {
+      if (document.visibilityState === 'visible' && pendingPayRef.current) void checkPayment(pendingPayRef.current);
+    };
+    document.addEventListener('visibilitychange', onFocus);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      stopPoll();
+      document.removeEventListener('visibilitychange', onFocus);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -146,6 +168,12 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     for (const tc of toolCalls) {
       applyTool({ id: tc.id, name: tc.name, args: tc.args } as ToolEvent);
     }
+    // Авто-саммари: если оформление прошло, а модель не вызвала set_summary —
+    // собираем саммари детерминированно из карточки (карточка лида не должна пустовать).
+    const closed = toolCalls.some((t) => ['place_order', 'book_appointment', 'book_car'].includes(t.name));
+    if (closed && !toolCalls.some((t) => t.name === 'set_summary')) {
+      applyTool({ id: 'sum-' + Date.now(), name: 'set_summary', args: { text: buildSummary() } } as ToolEvent);
+    }
     // Ссылка должна оказаться в самом чате (мы в текстовом канале).
     if (toolCalls.some((t) => t.name === 'place_order') && useStore.getState().niche.crmView === 'order') {
       // ЮKassa: реальная ссылка на оплату под сумму корзины (источник истины UI).
@@ -155,6 +183,21 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       const link = smsCall ? String(smsCall.args.link ?? '') : '';
       if (link) addMessage({ from: 'agent', text: `🔗 ${link}` });
     }
+  };
+
+  // Детерминированное саммари из собранных полей карточки и заказа.
+  const buildSummary = (): string => {
+    const st = useStore.getState();
+    const filled = st.niche.fields
+      .filter((f) => st.card[f.key]?.value)
+      .map((f) => `${f.label}: ${st.card[f.key].value}`);
+    let s = filled.join(', ');
+    if (st.niche.crmView === 'order' && st.order.length) {
+      const { grandTotal } = orderTotals(st.order, st.niche.id);
+      const items = st.order.map((it) => `${it.name} — ${it.qty} ${it.unit || 'шт'}`).join('; ');
+      s += `${s ? '. ' : ''}Заказ: ${items}. Итого ${grandTotal.toLocaleString('ru-RU')} ₽`;
+    }
+    return s || 'Лид собран в ходе диалога.';
   };
 
   const createRealPayment = async () => {
