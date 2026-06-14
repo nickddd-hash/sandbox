@@ -245,7 +245,7 @@ const lendauto: NicheConfig = {
   },
   crmView: 'rental',
   script: [
-    { at: 600, say: { from: 'agent', text: 'Lend Auto, добрый день, меня зовут Марина!' } },
+    { at: 600, say: { from: 'agent', text: 'Лэнд Авто, добрый день, меня зовут Марина!' } },
     { at: 2400, say: { from: 'user', text: 'Здравствуйте, хочу арендовать машину на несколько дней.' } },
     { at: 3400, say: { from: 'agent', text: 'Отлично! Какой автомобиль вас интересует — эконом, комфорт или что-то побизнес-класса?' } },
     { at: 5200, say: { from: 'user', text: 'Что-нибудь комфортное, типа Kia Rio или Hyundai.' } },
@@ -266,7 +266,7 @@ const lendauto: NicheConfig = {
     { at: 18200, say: { from: 'user', text: '89221234567.' } },
     { at: 18600, tool: { name: 'update_card', args: { field: 'phone', value: '+7 922 123-45-67' } } },
     { at: 19400, say: { from: 'agent', text: 'Отправляю вам SMS со ссылкой для оформления брони.' } },
-    { at: 20000, tool: { name: 'show_sms', args: { text: 'Lend Auto: Kia Rio, 20–25 июня, Краснодар. Оформите бронь:', link: 'https://go.lend-auto.ru/' } } },
+    { at: 20000, tool: { name: 'show_sms', args: { text: 'Лэнд Авто: Kia Rio, 20–25 июня, Краснодар. Оформите бронь:', link: 'https://go.lend-auto.ru/' } } },
     { at: 20400, tool: { name: 'book_car', args: { car: 'Kia Rio', dateFrom: '20 июня', dateTo: '25 июня', client: 'Александр', city: 'Краснодар' } } },
     { at: 20800, tool: { name: 'lead_score', args: { score: 88, sentiment: 'горячий' } } },
     { at: 21400, tool: { name: 'set_summary', args: { text: 'Александр, Краснодар — Kia Rio с 20 по 25 июня (5 сут, 16 000 ₽). Отправлено SMS со ссылкой на бронь.' } } },
