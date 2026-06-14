@@ -18,6 +18,7 @@ export function CrmBoard() {
   const summary = useStore((s) => s.summary);
   const score = useStore((s) => s.score);
   const sms = useStore((s) => s.sms);
+  const channel = useStore((s) => s.channel);
   const transferReason = useStore((s) => s.transferReason);
 
   const filledCount = niche.fields.filter((f) => card[f.key]).length;
@@ -83,7 +84,9 @@ export function CrmBoard() {
 
       {sms && (
         <div className="sms-banner">
-          <div className="sms-label">📱 SMS отправлено</div>
+          <div className="sms-label">
+            {channel === 'chat' ? '🔗 Ссылка отправлена в чат' : '📱 SMS отправлено'}
+          </div>
           <div className="sms-body">
             {sms.text}{' '}
             <a className="sms-link" href="#" onClick={(e) => e.preventDefault()}>
