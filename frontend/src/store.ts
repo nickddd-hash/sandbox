@@ -113,7 +113,7 @@ interface State {
   setChannel: (c: Channel) => void;
   setStatus: (s: ConnStatus) => void;
   setLastCallSec: (sec: number) => void;
-  addMessage: (m: Omit<ChatMessage, 'id'>) => void;
+  addMessage: (m: Omit<ChatMessage, 'id'>, separate?: boolean) => void;
   applyTool: (e: ToolEvent) => void;
   toggleBehindScenes: () => void;
   clearCallback: () => void;
@@ -243,12 +243,13 @@ export const useStore = create<State>((set, get) => ({
   setChannel: (channel) => set({ channel }),
   setStatus: (status) => set({ status }),
 
-  addMessage: (m) =>
+  addMessage: (m, separate) =>
     set((s) => {
       // Агент шлёт каждую фразу отдельным сообщением (для TTS). В чате склеиваем
       // подряд идущие реплики ассистента в один пузырь, чтобы не было «рваного» вида.
+      // separate=true — служебные сообщения (ссылка, «оплата получена») отдельным пузырём.
       const last = s.messages[s.messages.length - 1];
-      if (m.from === 'agent' && last && last.from === 'agent') {
+      if (!separate && m.from === 'agent' && last && last.from === 'agent') {
         const merged = { ...last, text: `${last.text} ${m.text}`.trim() };
         return { messages: [...s.messages.slice(0, -1), merged] };
       }

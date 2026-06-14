@@ -89,7 +89,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       if (status === 'succeeded' || status === 'waiting_for_capture') {
         stopPoll();
         pendingPayRef.current = null;
-        addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' });
+        addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' }, true);
         return true;
       }
       if (status === 'canceled') {
@@ -181,7 +181,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     } else {
       const smsCall = toolCalls.find((t) => t.name === 'show_sms');
       const link = smsCall ? String(smsCall.args.link ?? '') : '';
-      if (link) addMessage({ from: 'agent', text: `🔗 ${link}` });
+      if (link) addMessage({ from: 'agent', text: `🔗 ${link}` }, true);
     }
   };
 
@@ -208,7 +208,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       const { url, id } = await createPayment(grandTotal, `Оплата заказа — ${st.niche.label}`);
       if (!url) return;
       // Ссылка в чат (кликабельная) + в баннер CRM.
-      addMessage({ from: 'agent', text: `💳 Оплатить заказ на ${grandTotal.toLocaleString('ru-RU')} ₽: ${url}` });
+      addMessage({ from: 'agent', text: `💳 Оплатить заказ на ${grandTotal.toLocaleString('ru-RU')} ₽: ${url}` }, true);
       st.applyTool({
         id: 'pay-' + Date.now(),
         name: 'show_sms',
