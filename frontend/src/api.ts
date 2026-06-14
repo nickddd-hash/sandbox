@@ -43,6 +43,19 @@ export async function sendChatMessage(
   return res.json();
 }
 
+export async function createPayment(
+  amount: number,
+  description: string,
+): Promise<{ url: string | null }> {
+  const res = await fetch('/api/payment', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ amount, description }),
+  });
+  if (!res.ok) throw new Error(`payment_${res.status}`);
+  return res.json();
+}
+
 export async function postLead(payload: {
   sessionId: string;
   niche: Niche;

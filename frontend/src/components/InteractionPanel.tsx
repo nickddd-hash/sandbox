@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { sendChatMessage } from '../api';
+import { sendChatMessage, createPayment } from '../api';
+import { orderTotals } from '../order';
 import type { ToolEvent } from '../types';
 
 interface Props {
@@ -102,6 +103,30 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     }
     for (const tc of toolCalls) {
       applyTool({ id: tc.id, name: tc.name, args: tc.args } as ToolEvent);
+    }
+    // ЮKassa: для ниш-заказов после оформления создаём реальную ссылку на оплату
+    // (сумма — из корзины, источник истины UI) и кладём её в баннер ссылки.
+    if (toolCalls.some((t) => t.name === 'place_order')) {
+      void createRealPayment();
+    }
+  };
+
+  const createRealPayment = async () => {
+    const st = useStore.getState();
+    if (st.niche.crmView !== 'order') return;
+    const { grandTotal } = orderTotals(st.order, st.niche.id);
+    if (!(grandTotal > 0)) return;
+    try {
+      const { url } = await createPayment(grandTotal, `Оплата заказа — ${st.niche.label}`);
+      if (url) {
+        st.applyTool({
+          id: 'pay-' + Date.now(),
+          name: 'show_sms',
+          args: { text: `Оплата заказа на ${grandTotal.toLocaleString('ru-RU')} ₽:`, link: url },
+        } as ToolEvent);
+      }
+    } catch {
+      /* демо: при сбое платежа оставляем ссылку, которую дал бот */
     }
   };
 

@@ -50,6 +50,12 @@ export const config = {
     webhookUrl: str('BITRIX_WEBHOOK_URL'),
   },
 
+  yookassa: {
+    shopId: str('YOOKASSA_SHOP_ID'),
+    secretKey: str('YOOKASSA_SECRET_KEY'),
+    returnUrl: str('YOOKASSA_RETURN_URL', 'https://sandbox.flowsmart.ru'),
+  },
+
   voximplant: {
     accountId: str('VOXIMPLANT_ACCOUNT_ID'),
     apiKey: str('VOXIMPLANT_API_KEY'),
@@ -85,3 +91,7 @@ export const supabaseEnabled = (): boolean =>
 
 // Настроен ли входящий вебхук Bitrix24 для отправки лидов в CRM.
 export const bitrixEnabled = (): boolean => Boolean(config.bitrix.webhookUrl);
+
+// Настроена ли ЮKassa для создания платежей.
+export const yookassaEnabled = (): boolean =>
+  Boolean(config.yookassa.shopId && config.yookassa.secretKey);

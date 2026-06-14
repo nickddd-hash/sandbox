@@ -89,9 +89,15 @@ export function CrmBoard() {
           </div>
           <div className="sms-body">
             {sms.text}{' '}
-            <a className="sms-link" href="#" onClick={(e) => e.preventDefault()}>
-              {sms.link}
-            </a>
+            {/^https?:\/\//.test(sms.link) ? (
+              <a className="sms-link" href={sms.link} target="_blank" rel="noopener noreferrer">
+                {sms.link}
+              </a>
+            ) : (
+              <a className="sms-link" href="#" onClick={(e) => e.preventDefault()}>
+                {sms.link}
+              </a>
+            )}
           </div>
         </div>
       )}

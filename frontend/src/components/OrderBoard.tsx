@@ -1,5 +1,6 @@
 import { useStore } from '../store';
 import { formatRub } from '../roi';
+import { orderTotals, FREE_KG, FLAT_DELIVERY } from '../order';
 
 function fmtDateTime(ts: number): string {
   return new Date(ts).toLocaleString('ru-RU', {
@@ -17,18 +18,7 @@ export function OrderBoard() {
   const payment = useStore((s) => s.card.payment?.value);
   const nicheId = useStore((s) => s.niche.id);
 
-  const isWeight = nicheId === 'meat';
-  const FREE_KG = 15;
-  const FREE_RUB = 1000;
-  const FLAT_DELIVERY = 200;
-
-  const total = order.reduce((sum, it) => sum + it.price * it.qty, 0);
-  const weightKg = order.reduce(
-    (sum, it) => sum + ((it.unit || '').toLowerCase().startsWith('кг') ? it.qty : 0),
-    0,
-  );
-  const freeDelivery = isWeight ? weightKg >= FREE_KG : total >= FREE_RUB;
-  const grandTotal = isWeight ? total : total + (freeDelivery ? 0 : FLAT_DELIVERY);
+  const { isWeight, weightKg, freeDelivery, grandTotal } = orderTotals(order, nicheId);
   const deliveryLabel = freeDelivery
     ? 'бесплатно'
     : isWeight
