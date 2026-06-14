@@ -233,6 +233,8 @@
 .bubble { max-width: 80%; font-size: 13.5px; line-height: 1.45; padding: 9px 13px; border-radius: 14px; }
 .bubble--ai { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-top-left-radius: 5px; }
 .bubble--client { background: var(--accent); color: #fff; border-top-right-radius: 5px; }
+.bubble-link { color: var(--accent); font-weight: 600; text-decoration: underline; word-break: break-all; }
+.bubble--client .bubble-link { color: #fff; }
 @keyframes lineIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
 
 .typing { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }

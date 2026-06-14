@@ -37,6 +37,19 @@ function fmt(sec: number): string {
   return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 }
 
+// Превращает http(s)-ссылки в тексте сообщения в кликабельные.
+function linkify(text: string) {
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a key={i} className="bubble-link" href={part} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    ) : (
+      part
+    ),
+  );
+}
+
 export function InteractionPanel({ onLaunch, onStop }: Props) {
   const [tab, setTab] = useState<'call' | 'chat'>('call');
 
@@ -104,27 +117,31 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     for (const tc of toolCalls) {
       applyTool({ id: tc.id, name: tc.name, args: tc.args } as ToolEvent);
     }
-    // ЮKassa: для ниш-заказов после оформления создаём реальную ссылку на оплату
-    // (сумма — из корзины, источник истины UI) и кладём её в баннер ссылки.
-    if (toolCalls.some((t) => t.name === 'place_order')) {
+    // Ссылка должна оказаться в самом чате (мы в текстовом канале).
+    if (toolCalls.some((t) => t.name === 'place_order') && useStore.getState().niche.crmView === 'order') {
+      // ЮKassa: реальная ссылка на оплату под сумму корзины (источник истины UI).
       void createRealPayment();
+    } else {
+      const smsCall = toolCalls.find((t) => t.name === 'show_sms');
+      const link = smsCall ? String(smsCall.args.link ?? '') : '';
+      if (link) addMessage({ from: 'agent', text: `🔗 ${link}` });
     }
   };
 
   const createRealPayment = async () => {
     const st = useStore.getState();
-    if (st.niche.crmView !== 'order') return;
     const { grandTotal } = orderTotals(st.order, st.niche.id);
     if (!(grandTotal > 0)) return;
     try {
       const { url } = await createPayment(grandTotal, `Оплата заказа — ${st.niche.label}`);
-      if (url) {
-        st.applyTool({
-          id: 'pay-' + Date.now(),
-          name: 'show_sms',
-          args: { text: `Оплата заказа на ${grandTotal.toLocaleString('ru-RU')} ₽:`, link: url },
-        } as ToolEvent);
-      }
+      if (!url) return;
+      // Ссылка в чат (кликабельная) + в баннер CRM.
+      addMessage({ from: 'agent', text: `💳 Оплатить заказ на ${grandTotal.toLocaleString('ru-RU')} ₽: ${url}` });
+      st.applyTool({
+        id: 'pay-' + Date.now(),
+        name: 'show_sms',
+        args: { text: `Оплата заказа на ${grandTotal.toLocaleString('ru-RU')} ₽:`, link: url },
+      } as ToolEvent);
     } catch {
       /* демо: при сбое платежа оставляем ссылку, которую дал бот */
     }
@@ -134,6 +151,10 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     setChatActive(true);
     setLoading(true);
     historyRef.current = [];
+    // Новый чат — чистая карточка и корзина (иначе позиции прошлых диалогов суммируются).
+    const st = useStore.getState();
+    st.resetConversation();
+    if (st.contact) st.submitContact(st.contact.name, st.contact.phone);
     try {
       const { reply, toolCalls } = await sendChatMessage(undefined, [], nicheId);
       handleResponse(reply, toolCalls);
@@ -248,7 +269,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
                 className={'bubble-row' + (m.from === 'user' ? ' bubble-row--client' : '')}
               >
                 <div className={'bubble' + (m.from === 'agent' ? ' bubble--ai' : ' bubble--client')}>
-                  {m.text}
+                  {linkify(m.text)}
                 </div>
               </div>
             ))}
