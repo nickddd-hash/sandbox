@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
 import { sendChatMessage, createPayment, getPaymentStatus } from '../api';
 import { orderTotals } from '../order';
+import { matchObject } from '../config/realtyObjects';
 import type { ToolEvent } from '../types';
 
 interface Props {
@@ -38,16 +39,31 @@ function fmt(sec: number): string {
 }
 
 // Превращает http(s)-ссылки в тексте сообщения в кликабельные.
+// Ссылку «осмотр недвижимости» перехватываем — открываем демо-страницу (модалку).
 function linkify(text: string) {
-  return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
-    /^https?:\/\//.test(part) ? (
+  return text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
+    if (!/^https?:\/\//.test(part)) return part;
+    if (part.includes('novosel.ru/osmotr')) {
+      return (
+        <a
+          key={i}
+          className="bubble-link"
+          href={part}
+          onClick={(e) => {
+            e.preventDefault();
+            useStore.getState().openViewing();
+          }}
+        >
+          {part}
+        </a>
+      );
+    }
+    return (
       <a key={i} className="bubble-link" href={part} target="_blank" rel="noopener noreferrer">
         {part}
       </a>
-    ) : (
-      part
-    ),
-  );
+    );
+  });
 }
 
 export function InteractionPanel({ onLaunch, onStop }: Props) {
@@ -179,9 +195,25 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       applyTool({ id: 'score-' + Date.now(), name: 'lead_score', args: { score: 88, sentiment: 'горячий' } } as ToolEvent);
     }
     // Ссылка должна оказаться в самом чате (мы в текстовом канале).
-    if (toolCalls.some((t) => t.name === 'place_order') && useStore.getState().niche.crmView === 'order') {
+    const niche = useStore.getState().niche;
+    if (toolCalls.some((t) => t.name === 'place_order') && niche.crmView === 'order') {
       // ЮKassa: реальная ссылка на оплату под сумму корзины (источник истины UI).
       void createRealPayment();
+    } else if (niche.id === 'realty' && toolCalls.some((t) => t.name === 'book_appointment')) {
+      // Недвижимость: ссылка открывает демо-страницу осмотра (карточка объекта + детали).
+      const st = useStore.getState();
+      const a = st.appointments[st.appointments.length - 1];
+      const service = a?.service || st.card.service?.value || '';
+      st.setViewing({
+        service,
+        date: st.card.date?.value || (a ? `${a.day} ${a.time}`.trim() : ''),
+        realtor: a?.master || st.card.master?.value || '',
+        client: a?.client || st.card.name?.value || '',
+        phone: st.card.phone?.value || '',
+      });
+      const url = `https://novosel.ru/osmotr/${matchObject(service)?.id ?? '4821'}`;
+      addMessage({ from: 'agent', text: `🔗 Детали осмотра и карточка объекта: ${url}` }, true);
+      st.applyTool({ id: 'view-' + Date.now(), name: 'show_sms', args: { text: 'Детали осмотра и карточка объекта:', link: url } } as ToolEvent);
     } else {
       const smsCall = toolCalls.find((t) => t.name === 'show_sms');
       const link = smsCall ? String(smsCall.args.link ?? '') : '';

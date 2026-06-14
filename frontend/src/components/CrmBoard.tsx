@@ -19,6 +19,7 @@ export function CrmBoard() {
   const score = useStore((s) => s.score);
   const sms = useStore((s) => s.sms);
   const channel = useStore((s) => s.channel);
+  const openViewing = useStore((s) => s.openViewing);
   const transferReason = useStore((s) => s.transferReason);
 
   const filledCount = niche.fields.filter((f) => card[f.key]).length;
@@ -89,7 +90,11 @@ export function CrmBoard() {
           </div>
           <div className="sms-body">
             {sms.text}{' '}
-            {/^https?:\/\//.test(sms.link) ? (
+            {sms.link.includes('novosel.ru/osmotr') ? (
+              <a className="sms-link" href={sms.link} onClick={(e) => { e.preventDefault(); openViewing(); }}>
+                {sms.link}
+              </a>
+            ) : /^https?:\/\//.test(sms.link) ? (
               <a className="sms-link" href={sms.link} target="_blank" rel="noopener noreferrer">
                 {sms.link}
               </a>

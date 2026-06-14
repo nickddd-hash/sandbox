@@ -11,6 +11,7 @@ import { InteractionPanel } from './components/InteractionPanel';
 import { RoiPanel } from './components/RoiPanel';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
+import { ViewingModal } from './components/ViewingModal';
 
 const HOOD_ITEMS: [string, string][] = [
   ['Речь → текст → речь', 'Распознавание и синтез голоса в реальном времени, без задержек.'],
@@ -144,6 +145,7 @@ export default function App() {
       </footer>
 
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
+      <ViewingModal />
       <BehindTheScenes />
       <UnderHoodModal open={hoodOpen} onClose={() => setHoodOpen(false)} />
     </div>

@@ -73,6 +73,15 @@ export interface OrderRecord {
   deliveryTime?: string;
 }
 
+// Данные осмотра недвижимости — для демо-страницы (карточка объекта + детали визита).
+export interface ViewingInfo {
+  service: string;
+  date: string;
+  realtor: string;
+  client: string;
+  phone: string;
+}
+
 interface State {
   niche: NicheConfig;
   mode: SessionMode;
@@ -99,6 +108,8 @@ interface State {
   bonusPoints: number;
   rentals: RentalBooking[];
   lastAvailabilityCheck: { car: string; available: boolean } | null;
+  viewing: ViewingInfo | null;
+  viewingOpen: boolean;
 
   toolLog: ToolLogEntry[];
   showBehindScenes: boolean;
@@ -107,6 +118,9 @@ interface State {
   // actions
 
   setNiche: (id: string) => void;
+  setViewing: (v: ViewingInfo) => void;
+  openViewing: () => void;
+  closeViewing: () => void;
   openGate: () => void;
   submitContact: (name: string, phone: string) => void;
   beginSession: (s: { sessionId: string; mode: SessionMode; transport: Transport }) => void;
@@ -192,6 +206,8 @@ export const useStore = create<State>((set, get) => ({
   bonusPoints: 0,
   rentals: [],
   lastAvailabilityCheck: null,
+  viewing: null,
+  viewingOpen: false,
 
   toolLog: [],
   showBehindScenes: false,
@@ -216,10 +232,16 @@ export const useStore = create<State>((set, get) => ({
       bonusPoints: 0,
       rentals: [],
       lastAvailabilityCheck: null,
+      viewing: null,
+      viewingOpen: false,
       toolLog: [],
       status: 'idle',
     });
   },
+
+  setViewing: (v) => set({ viewing: v }),
+  openViewing: () => set({ viewingOpen: true }),
+  closeViewing: () => set({ viewingOpen: false }),
 
   openGate: () => set({ gateOpen: true }),
 
@@ -420,6 +442,8 @@ export const useStore = create<State>((set, get) => ({
       bonusPoints: 0,
       rentals: [],
       lastAvailabilityCheck: null,
+      viewing: null,
+      viewingOpen: false,
       toolLog: [],
       status: 'idle',
     });
