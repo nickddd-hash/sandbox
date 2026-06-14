@@ -400,6 +400,9 @@ interface ToolCall { id: string; type: 'function'; function: { name: string; arg
 // «закрывающие»: идут серией, цикл нельзя обрывать, иначе саммари/скоринг/SMS не сработают.
 const DATA_CAPTURE_TOOLS = new Set(['update_card', 'add_order_item', 'check_availability']);
 
+// Имя-заглушка: при таком client запись/бронь не оформляем, пока не спросим контакты.
+const PLACEHOLDER_NAME = /неизвест|не указан|не назван|^клиент$|^гость$|^имя$|n\/?a|^—$|^-$/i;
+
 // Универсальное правило финала — добавляется ко всем нишевым промптам, чтобы модель
 // не «теряла» скоринг и саммари (карточка лида должна заполняться до конца).
 const CLOSING_RULE = `
@@ -457,12 +460,32 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       // Включаем tool_calls в assistant-сообщение — без них tool-результаты «висят в воздухе»
       // и LLM не понимает контекст, повторяя уже заданные вопросы.
       messages.push({ role: 'assistant', content: msg.content ?? null, ...(msg.tool_calls && { tool_calls: msg.tool_calls }) });
-      if (msg.content) replyParts.push(msg.content);
 
-      if (!msg.tool_calls?.length) break;
+      if (!msg.tool_calls?.length) {
+        if (msg.content) replyParts.push(msg.content);
+        break;
+      }
 
+      let rejected = false;
       for (const tc of msg.tool_calls) {
         const args = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+        // Защита: не оформляем запись/бронь без имени клиента — заставляем сначала
+        // спросить имя и телефон (модель иногда записывает «неизвестного»).
+        if (tc.function.name === 'book_appointment' || tc.function.name === 'book_car') {
+          const client = String((args as { client?: unknown }).client ?? '').trim();
+          if (!client || PLACEHOLDER_NAME.test(client)) {
+            messages.push({
+              role: 'tool',
+              tool_call_id: tc.id,
+              content: JSON.stringify({
+                result: 'error',
+                message: 'Имя клиента не указано. Сначала спроси имя И телефон клиента, сохрани их через update_card(name) и update_card(phone), и только потом оформляй.',
+              }),
+            });
+            rejected = true;
+            continue;
+          }
+        }
         toolCalls.push({ id: tc.id, name: tc.function.name, args });
         // lendauto: при выборе авто инжектируем визуальный check_availability для RentalBoard
         if (niche === 'lendauto' && tc.function.name === 'update_card' && (args as { field?: string }).field === 'car') {
@@ -471,12 +494,15 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         messages.push({ role: 'tool', content: JSON.stringify({ result: 'ok' }), tool_call_id: tc.id });
       }
 
+      // Текст показываем, только если ничего не отклонили (иначе «записала» прозвучит преждевременно).
+      if (msg.content && !rejected) replyParts.push(msg.content);
+
       // Шаг-за-шагом: если агент задал вопрос (есть текст) и вызвал ТОЛЬКО tools сбора
-      // данных — отдаём ответ сразу и ждём реплику клиента. Если же среди вызовов есть
-      // «закрывающие» — продолжаем цикл, чтобы добить всю серию (оформление → SMS →
-      // саммари/скоринг), накапливая текст.
+      // данных — отдаём ответ сразу и ждём реплику клиента. Если среди вызовов есть
+      // «закрывающие» — продолжаем цикл, чтобы добить серию. Если что-то отклонили —
+      // тоже продолжаем (модель должна спросить недостающее).
       const dataOnly = msg.tool_calls.every((tc) => DATA_CAPTURE_TOOLS.has(tc.function.name));
-      if (msg.content && dataOnly) break;
+      if (msg.content && dataOnly && !rejected) break;
     }
 
     return reply.send({ reply: replyParts.join(' ').trim(), toolCalls });
