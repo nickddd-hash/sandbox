@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { sendChatMessage, createPayment } from '../api';
+import { sendChatMessage, createPayment, getPaymentStatus } from '../api';
 import { orderTotals } from '../order';
 import type { ToolEvent } from '../types';
 
@@ -73,6 +73,35 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
   const historyRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pollRef = useRef<number | null>(null);
+
+  const stopPoll = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+  // Опрос статуса платежа ЮKassa: как только succeeded — сообщение в чат.
+  const pollPayment = (id: string) => {
+    stopPoll();
+    let attempts = 0;
+    pollRef.current = window.setInterval(async () => {
+      if (++attempts > 60) return stopPoll(); // ~3 минуты и хватит
+      try {
+        const { status } = await getPaymentStatus(id);
+        if (status === 'succeeded') {
+          stopPoll();
+          addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' });
+        } else if (status === 'canceled') {
+          stopPoll();
+        }
+      } catch {
+        /* временную ошибку опроса игнорируем */
+      }
+    }, 3000);
+  };
+  // Чистим опрос при размонтировании.
+  useEffect(() => stopPoll, []);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -133,7 +162,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     const { grandTotal } = orderTotals(st.order, st.niche.id);
     if (!(grandTotal > 0)) return;
     try {
-      const { url } = await createPayment(grandTotal, `Оплата заказа — ${st.niche.label}`);
+      const { url, id } = await createPayment(grandTotal, `Оплата заказа — ${st.niche.label}`);
       if (!url) return;
       // Ссылка в чат (кликабельная) + в баннер CRM.
       addMessage({ from: 'agent', text: `💳 Оплатить заказ на ${grandTotal.toLocaleString('ru-RU')} ₽: ${url}` });
@@ -142,6 +171,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
         name: 'show_sms',
         args: { text: `Оплата заказа на ${grandTotal.toLocaleString('ru-RU')} ₽:`, link: url },
       } as ToolEvent);
+      if (id) pollPayment(id); // ждём оплату → сообщение «оплачено»
     } catch {
       /* демо: при сбое платежа оставляем ссылку, которую дал бот */
     }
@@ -151,6 +181,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     setChatActive(true);
     setLoading(true);
     historyRef.current = [];
+    stopPoll();
     // Новый чат — чистая карточка и корзина (иначе позиции прошлых диалогов суммируются).
     const st = useStore.getState();
     st.resetConversation();

@@ -1,8 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import { createPayment } from '../services/yookassa.js';
+import { createPayment, getPaymentStatus } from '../services/yookassa.js';
 import { yookassaEnabled } from '../config.js';
 
-// Создаёт платёж в ЮKassa под сумму заказа и возвращает ссылку на оплату.
+// Создаёт платёж в ЮKassa под сумму заказа и возвращает ссылку на оплату + id.
 export async function paymentRoutes(app: FastifyInstance): Promise<void> {
   app.post('/api/payment', async (req, reply) => {
     const b = (req.body ?? {}) as { amount?: number; description?: string };
@@ -16,11 +16,25 @@ export async function paymentRoutes(app: FastifyInstance): Promise<void> {
         : 'Оплата заказа';
 
     try {
-      const url = await createPayment({ amount, description });
-      return reply.send({ url });
+      const payment = await createPayment({ amount, description });
+      return reply.send(payment ?? { url: null });
     } catch (err) {
       req.log.error({ err }, 'ЮKassa: не удалось создать платёж');
       return reply.code(502).send({ error: 'payment_failed' });
+    }
+  });
+
+  // Статус платежа (фронт опрашивает, чтобы показать «оплачено»).
+  app.get('/api/payment/:id', async (req, reply) => {
+    const { id } = req.params as { id: string };
+    if (!id) return reply.code(400).send({ error: 'invalid_id' });
+    if (!yookassaEnabled()) return reply.code(503).send({ error: 'yookassa_not_configured' });
+    try {
+      const status = await getPaymentStatus(id);
+      return reply.send({ status });
+    } catch (err) {
+      req.log.error({ err }, 'ЮKassa: не удалось получить статус платежа');
+      return reply.code(502).send({ error: 'status_failed' });
     }
   });
 }

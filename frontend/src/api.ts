@@ -46,13 +46,19 @@ export async function sendChatMessage(
 export async function createPayment(
   amount: number,
   description: string,
-): Promise<{ url: string | null }> {
+): Promise<{ url: string | null; id?: string }> {
   const res = await fetch('/api/payment', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ amount, description }),
   });
   if (!res.ok) throw new Error(`payment_${res.status}`);
+  return res.json();
+}
+
+export async function getPaymentStatus(id: string): Promise<{ status: string | null }> {
+  const res = await fetch(`/api/payment/${encodeURIComponent(id)}`);
+  if (!res.ok) throw new Error(`payment_status_${res.status}`);
   return res.json();
 }
 
