@@ -392,6 +392,11 @@ type Message = { role: 'user' | 'assistant' | 'system' | 'tool'; content: string
 
 interface ToolCall { id: string; type: 'function'; function: { name: string; arguments: string } }
 
+// Tools «сбора данных»: после них агент обычно задаёт следующий вопрос и ждёт клиента.
+// Всё остальное (place_order, book_*, show_sms, lead_score, set_summary, transfer) —
+// «закрывающие»: идут серией, цикл нельзя обрывать, иначе саммари/скоринг/SMS не сработают.
+const DATA_CAPTURE_TOOLS = new Set(['update_card', 'add_order_item', 'check_availability']);
+
 export async function chatRoutes(app: FastifyInstance): Promise<void> {
   app.post('/api/chat', async (req, reply) => {
     const { message, history = [], niche = 'lendauto' } = (req.body ?? {}) as {
@@ -413,6 +418,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
     ];
 
     const toolCalls: { id: string; name: string; args: Record<string, unknown> }[] = [];
+    const replyParts: string[] = [];
 
     // Цикл tool-calling: LLM может вызвать несколько tools подряд.
     for (let i = 0; i < 8; i++) {
@@ -436,6 +442,7 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
       // Включаем tool_calls в assistant-сообщение — без них tool-результаты «висят в воздухе»
       // и LLM не понимает контекст, повторяя уже заданные вопросы.
       messages.push({ role: 'assistant', content: msg.content ?? null, ...(msg.tool_calls && { tool_calls: msg.tool_calls }) });
+      if (msg.content) replyParts.push(msg.content);
 
       if (!msg.tool_calls?.length) break;
 
@@ -449,11 +456,14 @@ export async function chatRoutes(app: FastifyInstance): Promise<void> {
         messages.push({ role: 'tool', content: JSON.stringify({ result: 'ok' }), tool_call_id: tc.id });
       }
 
-      // Если агент уже дал текст вместе с tool calls — возвращаем сразу, без лишнего LLM-вызова
-      if (msg.content) break;
+      // Шаг-за-шагом: если агент задал вопрос (есть текст) и вызвал ТОЛЬКО tools сбора
+      // данных — отдаём ответ сразу и ждём реплику клиента. Если же среди вызовов есть
+      // «закрывающие» — продолжаем цикл, чтобы добить всю серию (оформление → SMS →
+      // саммари/скоринг), накапливая текст.
+      const dataOnly = msg.tool_calls.every((tc) => DATA_CAPTURE_TOOLS.has(tc.function.name));
+      if (msg.content && dataOnly) break;
     }
 
-    const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant' && m.content);
-    return reply.send({ reply: lastAssistant?.content ?? '', toolCalls });
+    return reply.send({ reply: replyParts.join(' ').trim(), toolCalls });
   });
 }
