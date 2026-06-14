@@ -140,11 +140,6 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     }
   };
 
-  const stopChat = () => {
-    setChatActive(false);
-    historyRef.current = [];
-  };
-
   const panelActive = tab === 'call' ? voiceActive : chatActive;
   const anyActive = voiceActive || chatActive;
 
@@ -249,24 +244,15 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
         {tab === 'chat' && (
           <div className="chat-input">
             {chatActive ? (
-              <>
-                <input
-                  ref={inputRef}
-                  className="chat-input-real"
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && void submitChat()}
-                  placeholder="Напишите сообщение…"
-                  disabled={loading}
-                />
-                <button
-                  className="chat-send"
-                  onClick={() => void submitChat()}
-                  disabled={loading}
-                >
-                  ↑
-                </button>
-              </>
+              <input
+                ref={inputRef}
+                className="chat-input-real"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && void submitChat()}
+                placeholder="Напишите сообщение…"
+                disabled={loading}
+              />
             ) : (
               <span className="chat-input-ph">Сообщение боту…</span>
             )}
@@ -283,13 +269,18 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
               <><ChatIcon /> Начать чат</>
             )}
           </button>
+        ) : tab === 'call' ? (
+          <button className="cta cta--stop" onClick={onStop}>
+            <span className="stop-sq" />
+            Завершить звонок
+          </button>
         ) : (
           <button
-            className="cta cta--stop"
-            onClick={tab === 'call' ? onStop : stopChat}
+            className="cta cta--chat"
+            onClick={() => void submitChat()}
+            disabled={loading || !draft.trim()}
           >
-            <span className="stop-sq" />
-            {tab === 'call' ? 'Завершить звонок' : 'Остановить'}
+            Отправить ↑
           </button>
         )}
       </div>

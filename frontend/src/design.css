@@ -266,6 +266,7 @@
 }
 .cta:hover { filter: brightness(1.05); transform: translateY(-1px); }
 .cta:active { transform: none; }
+.cta:disabled { opacity: .45; cursor: default; filter: none; transform: none; }
 .cta--call { background: var(--green); box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--green) 60%, transparent); }
 .cta--chat { background: var(--accent); box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--accent) 55%, transparent); }
 .cta--stop { background: var(--danger); }
