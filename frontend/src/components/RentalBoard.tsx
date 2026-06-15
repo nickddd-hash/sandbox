@@ -2,12 +2,12 @@ import { useStore } from '../store';
 import type { RentalBooking } from '../store';
 
 const CARS = [
-  { id: 'granta',  name: 'Lada Granta',              price: 2500 },
-  { id: 'logan',   name: 'Renault Logan',             price: 2800 },
-  { id: 'solaris', name: 'Hyundai Solaris',           price: 3200 },
-  { id: 'kia',     name: 'Kia Rio',                   price: 3000 },
-  { id: 'camry',   name: 'Toyota Camry',              price: 6000 },
-  { id: 'prado',   name: 'Toyota Land Cruiser Prado', price: 8500 },
+  { id: 'granta',  name: 'Lada Granta',              price: 2500, match: ['granta', 'гранта'] },
+  { id: 'logan',   name: 'Renault Logan',             price: 2800, match: ['logan', 'логан'] },
+  { id: 'solaris', name: 'Hyundai Solaris',           price: 3200, match: ['solaris', 'солярис'] },
+  { id: 'kia',     name: 'Kia Rio',                   price: 3000, match: ['rio', 'рио', 'kia', 'киа'] },
+  { id: 'camry',   name: 'Toyota Camry',              price: 6000, match: ['camry', 'камри'] },
+  { id: 'prado',   name: 'Toyota Land Cruiser Prado', price: 8500, match: ['prado', 'прадо', 'cruiser', 'крузер'] },
 ];
 
 const DEMO_BOOKED: { carId: string; days: number[] }[] = [
@@ -27,6 +27,8 @@ const MONTHS: Record<string, number> = {
 function parseDate(s: string): Date | null {
   const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+  const dmy = s.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  if (dmy) return new Date(Number(dmy[3]), Number(dmy[2]) - 1, Number(dmy[1]));
   const ru = s.match(/(\d{1,2})\s+(\S+)/);
   if (ru) {
     const day = Number(ru[1]);
@@ -107,14 +109,11 @@ export function RentalBoard() {
 
           {CARS.map((car) => {
             const demoOccupied = demoSet.get(car.id) ?? new Set<number>();
-            const liveRentals = rentals.filter(
-              (r) =>
-                r.car.toLowerCase().includes(car.name.split(' ')[1].toLowerCase()) ||
-                car.name.toLowerCase().includes(r.car.toLowerCase()),
+            const liveRentals = rentals.filter((r) =>
+              car.match.some((m) => r.car.toLowerCase().includes(m)),
             );
             const isChecked = check?.car
-              ? car.name.toLowerCase().includes(check.car.toLowerCase()) ||
-                check.car.toLowerCase().includes(car.name.split(' ')[1].toLowerCase())
+              ? car.match.some((m) => check.car.toLowerCase().includes(m))
               : false;
 
             return (
