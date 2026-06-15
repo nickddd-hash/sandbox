@@ -65,7 +65,11 @@
 .hood-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ───────── NICHE SWITCHER ───────── */
-.niche-wrap { padding: 4px 0 2px; overflow-x: auto; scrollbar-width: none; }
+.niche-wrap {
+  padding: 4px 0 2px; overflow-x: auto; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  mask-image: linear-gradient(to right, black 80%, transparent 100%);
+}
 .niche-wrap::-webkit-scrollbar { display: none; }
 .seg {
   display: inline-flex; gap: 3px; padding: 4px;
@@ -438,6 +442,52 @@
 .vw-btn--ghost { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border); }
 .vw-note { margin-top: 12px; font-size: 11.5px; color: var(--text-3); line-height: 1.4; }
 
+/* ───────── ONBOARDING ───────── */
+.onboard-overlay {
+  position: fixed; inset: 0; z-index: 200; background: rgba(15,23,42,.55);
+  backdrop-filter: blur(4px); display: grid; place-items: center; padding: 24px;
+  animation: fade .22s ease;
+}
+.onboard-card {
+  background: var(--surface); border-radius: 22px; max-width: 420px; width: 100%;
+  box-shadow: 0 24px 64px -12px rgba(15,23,42,.28), 0 0 0 1px var(--border);
+  animation: popUp .28s cubic-bezier(.2,.8,.3,1.05); overflow: hidden;
+}
+.onboard-head {
+  background: var(--accent); padding: 28px 28px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+}
+.onboard-mark {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: rgba(255,255,255,.18); display: grid; place-items: center;
+}
+.onboard-title { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: #fff; margin: 0; }
+.onboard-sub { font-size: 13.5px; color: rgba(255,255,255,.78); margin: 0; }
+.onboard-steps { padding: 22px 24px 4px; display: flex; flex-direction: column; gap: 18px; }
+.onboard-step { display: flex; gap: 16px; align-items: flex-start; }
+.onboard-num {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+  background: var(--accent-tint); color: var(--accent);
+  font-weight: 800; font-size: 14px; display: grid; place-items: center;
+}
+.onboard-step-title { font-size: 14.5px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.onboard-step-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; margin-top: 3px; }
+.onboard-cta {
+  display: block; width: calc(100% - 48px); margin: 20px 24px 24px;
+  padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+  background: var(--accent); color: #fff;
+  font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .01em;
+  transition: background .15s, transform .12s;
+}
+.onboard-cta:hover { background: var(--accent-600); transform: translateY(-1px); }
+.onboard-cta:active { transform: none; }
+.help-btn {
+  width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text-2); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: .15s; display: grid; place-items: center;
+}
+.help-btn:hover { border-color: var(--accent); color: var(--accent); }
+
 /* ───────── FOOTER ───────── */
 .page-foot { margin-top: 26px; text-align: center; }
 .foot-cta {
@@ -515,7 +565,7 @@
 }
 /* На мобиле ниши переносятся в строки внутри рамки, а не уезжают вправо. */
 @media (max-width: 640px) {
-  .niche-wrap { overflow: visible; }
+  .niche-wrap { overflow: visible; -webkit-mask-image: none; mask-image: none; }
   .seg { flex-wrap: wrap; min-width: 0; }
   .seg-btn { padding: 8px 12px; font-size: 13px; }
 }

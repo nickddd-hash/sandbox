@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from './store';
 import { useSandbox } from './useSandbox';
 import { NicheSwitcher } from './components/NicheSwitcher';
@@ -12,6 +12,9 @@ import { RoiPanel } from './components/RoiPanel';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
 import { ViewingModal } from './components/ViewingModal';
+import { OnboardingOverlay } from './components/OnboardingOverlay';
+
+const ONBOARD_KEY = 'sandbox_onboarded_v1';
 
 const HOOD_ITEMS: [string, string][] = [
   ['Речь → текст → речь', 'Распознавание и синтез голоса в реальном времени, без задержек.'],
@@ -54,6 +57,19 @@ export default function App() {
   const crmView = useStore((s) => s.niche.crmView);
   const nicheDisclaimer = useStore((s) => s.niche.disclaimer);
   const [hoodOpen, setHoodOpen] = useState(false);
+  const [onboardOpen, setOnboardOpen] = useState(false);
+
+  useEffect(() => {
+    const isPresenter = new URLSearchParams(window.location.search).has('presenter');
+    if (!isPresenter && !localStorage.getItem(ONBOARD_KEY)) {
+      setOnboardOpen(true);
+    }
+  }, []);
+
+  const closeOnboard = () => {
+    localStorage.setItem(ONBOARD_KEY, '1');
+    setOnboardOpen(false);
+  };
 
   return (
     <div className="app" data-theme="trust">
@@ -70,7 +86,10 @@ export default function App() {
             <div className="brand-sub">ИИ-консультант · демо-песочница</div>
           </div>
         </div>
-        <button className="hood-btn" onClick={() => setHoodOpen(true)}>под капотом</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="help-btn" onClick={() => setOnboardOpen(true)} title="Как пользоваться">?</button>
+          <button className="hood-btn" onClick={() => setHoodOpen(true)}>под капотом</button>
+        </div>
       </header>
 
       <div className="niche-wrap">
@@ -144,6 +163,7 @@ export default function App() {
         </div>
       </footer>
 
+      <OnboardingOverlay open={onboardOpen} onClose={closeOnboard} />
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
       <ViewingModal />
       <BehindTheScenes />
