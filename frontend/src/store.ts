@@ -396,7 +396,16 @@ export const useStore = create<State>((set, get) => ({
           // (модель может переслать ту же позицию с другим регистром/пробелами).
           const norm = (n: string) => n.trim().toLowerCase();
           if (s.order.some((x) => norm(x.name) === norm(item.name))) return {};
-          return { order: [...s.order, item] };
+          let order = s.order;
+          // Цветы: один цвет на тип цветка — добавление другого цвета того же цветка
+          // ЗАМЕНЯЕТ прежний (модель иногда сама выбирает цвет, потом меняет на нужный).
+          if (s.niche.id === 'flowers') {
+            const base = (n: string) => norm(n).split(/\s+/)[0];
+            const FLOWERS = ['розы', 'роза', 'тюльпаны', 'тюльпан', 'пионы', 'пион', 'хризантема', 'хризантемы', 'эустома', 'эустомы', 'гортензия', 'гортензии'];
+            const b = base(item.name);
+            if (FLOWERS.includes(b)) order = order.filter((x) => base(x.name) !== b);
+          }
+          return { order: [...order, item] };
         });
         return;
       }
