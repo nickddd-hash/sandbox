@@ -315,7 +315,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
   return (
     <section className="card panel">
       <header className="panel-head">
-        <div className="tabs" role="tablist">
+        <div className="tabs" role="tablist" data-tour="tabs">
           <button
             className={'tab' + (tab === 'call' ? ' tab--on' : '')}
             onClick={() => { if (!anyActive) { setTab('call'); setChannel('voice'); } }}

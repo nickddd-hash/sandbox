@@ -50,7 +50,7 @@ export function CrmBoard() {
             <div className="crm-progress-fill" style={{ width: `${pct}%` }} />
           </div>
 
-          <div className="fields">
+          <div className="fields" data-tour="fields">
             {niche.fields.map((f) => {
               const cell = card[f.key];
               const val = cell?.value ?? null;
