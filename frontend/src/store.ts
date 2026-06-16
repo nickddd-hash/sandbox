@@ -400,10 +400,27 @@ export const useStore = create<State>((set, get) => ({
         });
         return;
       }
+      case 'remove_order_item': {
+        // Убрать позицию (клиент передумал/сменил вариант/отказался). Гибкое совпадение по имени.
+        const key = String(e.args.name ?? '').trim().toLowerCase();
+        if (!key) return;
+        set((s) => ({
+          order: s.order.filter((x) => {
+            const n = x.name.trim().toLowerCase();
+            return !(n === key || n.includes(key) || key.includes(n));
+          }),
+        }));
+        return;
+      }
       case 'place_order': {
         set((s) => {
           if (s.order.length === 0) return {};
           const total = s.order.reduce((sum, it) => sum + it.price * it.qty, 0);
+          // Дедуп: не добавляем второй идентичный заказ (модель иногда зовёт place_order повторно).
+          const sig = s.order.map((it) => `${it.name}:${it.qty}:${it.price}`).join('|');
+          const last = s.orderHistory[s.orderHistory.length - 1];
+          const lastSig = last ? last.items.map((it) => `${it.name}:${it.qty}:${it.price}`).join('|') : '';
+          if (last && lastSig === sig) return {};
           const record: OrderRecord = {
             id: e.id,
             placedAt: now,

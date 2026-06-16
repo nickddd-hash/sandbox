@@ -118,6 +118,7 @@ const FLOWERS_PROMPT = `Ты — Алина, ЖЕНЩИНА, флорист цв
 
 НАЛИЧИЕ ПО ЦВЕТАМ — СТРОГО: розы/тюльпаны и т.д. РАЗНЫХ цветов — это РАЗНЫЕ товары. Если клиент просит цветок или ЦВЕТ, которого нет в списке выше (например жёлтые розы) — честно скажи, что сейчас такого нет, и предложи доступные цвета или аналог. НИКОГДА не выдумывай наличие и не принимай в заказ отсутствующий цвет. Уточняй цвет, если клиент не назвал.
 В add_order_item name ВСЕГДА указывай цвет: «Розы красные», «Тюльпаны жёлтые».
+НЕ добавляй цветок в заказ, ПОКА не уточнил цвет — сначала СПРОСИ цвет, и только потом add_order_item. НЕ подставляй цвет по умолчанию (не считай, что розы красные). Если клиент меняет цвет — remove_order_item(старый цвет) + add_order_item(новый). Если отказался от оформления — remove_order_item(«Оформление букета»).
 
 РАБОТА С CRM — АБСОЛЮТНОЕ ПРАВИЛО: НИКОГДА не пиши «записала», «оформила», «итого» без НЕМЕДЛЕННОГО вызова соответствующего инструмента. Сначала ВЫЗОВ TOOL, потом фраза. Каждый tool вызывай ТОЛЬКО при первом получении новой информации (не задваивай позиции/поля).
 — Каждая позиция → add_order_item(name, price, qty, unit). unit = 'шт' (поштучно) или 'букет' (готовый букет).
@@ -195,6 +196,7 @@ const T = {
   book_car: { name: 'book_car', description: 'Оформить бронь авто', parameters: { type: 'object', properties: { car: { type: 'string' }, dateFrom: { type: 'string' }, dateTo: { type: 'string' }, client: { type: 'string' }, city: { type: 'string' } }, required: ['car', 'dateFrom', 'dateTo', 'client'] } },
   book_appointment: { name: 'book_appointment', description: 'Записать клиента на услугу. master — мастер/врач, ОБЯЗАТЕЛЬНО (тот, кого предложили клиенту)', parameters: { type: 'object', properties: { day: { type: 'string' }, time: { type: 'string' }, service: { type: 'string' }, client: { type: 'string' }, master: { type: 'string' } }, required: ['day', 'time', 'service', 'client', 'master'] } },
   add_order_item: { name: 'add_order_item', description: 'Добавить позицию в заказ. price — ₽ за единицу, qty — количество, unit — единица измерения', parameters: { type: 'object', properties: { name: { type: 'string' }, price: { type: 'number' }, qty: { type: 'number' }, unit: { type: 'string', description: "единица измерения: 'кг' или 'шт'" } }, required: ['name', 'price', 'qty', 'unit'] } },
+  remove_order_item: { name: 'remove_order_item', description: 'Убрать позицию из заказа, если клиент передумал, отказался или сменил вариант (цвет/размер). name — название позиции как добавляли.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
   place_order: { name: 'place_order', description: 'Оформить заказ на доставку', parameters: { type: 'object', properties: { deliveryTime: { type: 'string' } }, required: ['deliveryTime'] } },
   request_callback: { name: 'request_callback', description: 'Запросить обратный звонок', parameters: { type: 'object', properties: { delaySeconds: { type: 'number' }, reason: { type: 'string' } }, required: ['delaySeconds', 'reason'] } },
   transfer: { name: 'transfer', description: 'Перевести на живого оператора', parameters: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] } },
@@ -388,9 +390,9 @@ const NICHE_CHAT: Record<string, { system: string; tools: Tool[] }> = {
   salon: { system: SALON_PROMPT, tools: [T.update_card, T.set_summary, T.lead_score, T.show_sms, T.book_appointment, T.request_callback, T.transfer] },
   dental: { system: DENTAL_PROMPT, tools: [T.update_card, T.set_summary, T.lead_score, T.show_sms, T.book_appointment, T.request_callback, T.transfer] },
   auto: { system: AUTO_PROMPT, tools: [T.update_card, T.set_summary, T.lead_score, T.show_sms, T.book_appointment, T.request_callback, T.transfer] },
-  meat: { system: MEATFOODS_PROMPT, tools: [T.add_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
-  food: { system: FOOD_PROMPT, tools: [T.add_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
-  flowers: { system: FLOWERS_PROMPT, tools: [T.add_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
+  meat: { system: MEATFOODS_PROMPT, tools: [T.add_order_item, T.remove_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
+  food: { system: FOOD_PROMPT, tools: [T.add_order_item, T.remove_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
+  flowers: { system: FLOWERS_PROMPT, tools: [T.add_order_item, T.remove_order_item, T.place_order, T.update_card, T.set_summary, T.lead_score, T.show_sms, T.request_callback, T.transfer] },
   realty: { system: REALTY_PROMPT, tools: [T.update_card, T.set_summary, T.lead_score, T.show_sms, T.book_appointment, T.request_callback, T.transfer] },
 };
 
@@ -413,6 +415,8 @@ const CLOSING_RULE = `
 — НЕ РАСКРЫВАЙ КУХНЮ (СТРОГО): НИКОГДА не упоминай в тексте служебные вызовы, инструменты, функции или их аргументы (add_order_item, update_card, place_order, show_sms, «вызовы», «функции», «CRM», «техподдержка» и т.п.) и НЕ пиши примечаний в скобках про систему. Клиент видит ТОЛЬКО обычную человеческую речь.
 
 — НЕ ВЫДУМЫВАЙ СБОИ: никогда не сообщай о «технических заминках», «сбоях системы» и не проси клиента продублировать/повторить уже названные данные. Если телефон в корректном формате (+7 или 8 и далее 10 цифр) — прими его СРАЗУ и переходи дальше, без повторов. НЕ объединяй два вопроса в одном сообщении (например телефон и способ оплаты — спрашивай по очереди).
+
+— ИЗМЕНЕНИЯ ЗАКАЗА (СТРОГО): если клиент передумал, сменил вариант (цвет/размер/блюдо) или отказался от позиции — ОБЯЗАТЕЛЬНО вызови remove_order_item для старой позиции (а при замене ещё и add_order_item для новой). В корзине должен остаться ТОЛЬКО финальный заказ — без отменённых/прежних позиций. Сумму считает карточка заказа; НЕ называй сумму, расходящуюся с ней.
 
 — СОХРАНЯЙ КАЖДОЕ ПОЛЕ СРАЗУ (СТРОГО): если клиент в ОДНОМ сообщении назвал несколько данных (например адрес + дата + время + имя), вызови соответствующий tool на КАЖДОЕ из них — ОТДЕЛЬНЫМИ вызовами, в этом же ответе. Устно подтвердить мало: что назвал клиент — то ОБЯЗАНО попасть в карточку через update_card (адрес→address, дата/время→date или deliveryTime, имя→name, телефон→phone и т.д.). Перед ответом сверься: всё названное сохранено? Чего нет — сохрани сейчас, не пропускай.
 
