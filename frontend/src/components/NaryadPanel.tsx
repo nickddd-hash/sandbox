@@ -38,6 +38,7 @@ export function NaryadPanel() {
   const history = useStore((s) => s.orderHistory);
   const appointments = useStore((s) => s.appointments);
   const rentals = useStore((s) => s.rentals);
+  const paid = useStore((s) => s.paid);
 
   const role = ROLE[nicheId] ?? { icon: '📋', title: 'Наряд исполнителю', doLabel: '' };
   const f = (k: string) => card[k]?.value || '';
@@ -90,7 +91,11 @@ export function NaryadPanel() {
               <Line label="Телефон" value={f('phone')} />
               <Line label="Адрес" value={f('address')} />
               <Line label="Когда" value={deliveryTime} />
-              <Line label="Оплата" value={f('payment')} />
+              <Line label="Способ оплаты" value={f('payment')} />
+              <Line
+                label="Статус оплаты"
+                value={paid ? '✅ Оплачено онлайн' : 'не оплачено — взять с клиента'}
+              />
               <Line
                 label="Сумма заказа"
                 value={total > 0 ? formatRub(total) : placed ? formatRub(placed.total) : ''}
