@@ -106,7 +106,7 @@ export default function App() {
           <CrmBoard />
           {crmView === 'order' && (
             <>
-              <div style={{ marginTop: 'var(--gap)' }}>
+              <div style={{ marginTop: 'var(--gap)' }} data-tour="board">
                 <OrderBoard />
               </div>
               <div style={{ marginTop: 'var(--gap)' }}>
@@ -122,8 +122,10 @@ export default function App() {
       </main>
 
       {(crmView === 'rental' || crmView === 'calendar') && (
-        <div className="board-wrap" data-tour="board">
-          {crmView === 'rental' ? <RentalBoard /> : <Calendar />}
+        <div className="board-wrap">
+          <div data-tour="board">
+            {crmView === 'rental' ? <RentalBoard /> : <Calendar />}
+          </div>
           <div style={{ marginTop: 'var(--gap)' }}>
             <NaryadPanel />
           </div>
