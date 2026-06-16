@@ -686,6 +686,14 @@
 }
 .invoice-dl-btn:hover { opacity: .85; }
 
+.invoice-demo-btn {
+  margin-top: 8px; width: 100%; padding: 8px 16px; border-radius: 8px;
+  background: transparent; color: var(--text-3); font-size: 12px;
+  border: 1px dashed var(--border-2); cursor: pointer;
+  font-family: inherit; transition: color .18s, border-color .18s;
+}
+.invoice-demo-btn:hover { color: var(--accent); border-color: var(--accent); }
+
 /* ───────── RESPONSIVE ───────── */
 @media (max-width: 940px) {
   .layout { grid-template-columns: 1fr; }

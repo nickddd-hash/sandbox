@@ -126,6 +126,12 @@ export function InvoiceFlow() {
               onChange={handleFile}
             />
           </label>
+          <button
+            className="invoice-demo-btn"
+            onClick={() => { setFileName('Реквизиты_компании.pdf'); setPhase('processing'); setTimeout(() => setPhase('ready'), 2400); }}
+          >
+            Показать демо (без файла)
+          </button>
         </div>
       )}
 
