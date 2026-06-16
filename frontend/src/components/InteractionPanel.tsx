@@ -244,6 +244,11 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     // и только ОДНА ссылка на заказ (модель иногда зовёт place_order рано/дважды).
     if (!st.card.name?.value || !st.card.phone?.value) return;
     if (paidLinkRef.current) return;
+    // Онлайн-ссылку шлём только при оплате картой онлайн. Наличные / безнал по счёту
+    // картой не оплачиваются (для «по счёту» отдельно показывается InvoiceFlow).
+    const pay = (st.card.payment?.value || '').toLowerCase();
+    const wantsOnline = /карт|онлайн|ссылк/.test(pay) || !/налич|сч[её]т|безнал/.test(pay);
+    if (!wantsOnline) return;
     const { grandTotal } = orderTotals(st.order, st.niche.id);
     if (!(grandTotal > 0)) return;
     paidLinkRef.current = true;
