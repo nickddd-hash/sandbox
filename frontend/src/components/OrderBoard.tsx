@@ -16,6 +16,7 @@ export function OrderBoard() {
   const history = useStore((s) => s.orderHistory);
   const bonus = useStore((s) => s.bonusPoints);
   const payment = useStore((s) => s.card.payment?.value);
+  const paid = useStore((s) => s.paid);
   const nicheId = useStore((s) => s.niche.id);
 
   const { isWeight, weightKg, freeDelivery, grandTotal } = orderTotals(order, nicheId);
@@ -88,6 +89,12 @@ export function OrderBoard() {
                   <span style={{ color: 'var(--text)' }}>{payment}</span>
                 </div>
               )}
+              <div className="order-total-row">
+                <span>Статус</span>
+                <span style={{ fontWeight: 700, color: paid ? 'var(--green)' : 'var(--text-3)' }}>
+                  {paid ? '✅ Оплачено' : 'Ожидает оплаты'}
+                </span>
+              </div>
             </div>
           )}
         </div>

@@ -106,6 +106,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       if (status === 'succeeded' || status === 'waiting_for_capture') {
         stopPoll();
         pendingPayRef.current = null;
+        useStore.getState().setPaid(); // статус заказа → Оплачено
         addMessage({ from: 'agent', text: '✅ Оплата получена! Ваш заказ оплачен — передаю в работу. Спасибо!' }, true);
         return true;
       }

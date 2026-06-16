@@ -110,6 +110,7 @@ interface State {
   lastAvailabilityCheck: { car: string; available: boolean } | null;
   viewing: ViewingInfo | null;
   viewingOpen: boolean;
+  paid: boolean; // заказ оплачен онлайн (после успешной оплаты ЮKassa)
 
   toolLog: ToolLogEntry[];
   showBehindScenes: boolean;
@@ -121,6 +122,7 @@ interface State {
   setViewing: (v: ViewingInfo) => void;
   openViewing: () => void;
   closeViewing: () => void;
+  setPaid: () => void;
   openGate: () => void;
   submitContact: (name: string, phone: string) => void;
   beginSession: (s: { sessionId: string; mode: SessionMode; transport: Transport }) => void;
@@ -208,6 +210,7 @@ export const useStore = create<State>((set, get) => ({
   lastAvailabilityCheck: null,
   viewing: null,
   viewingOpen: false,
+  paid: false,
 
   toolLog: [],
   showBehindScenes: false,
@@ -234,6 +237,7 @@ export const useStore = create<State>((set, get) => ({
       lastAvailabilityCheck: null,
       viewing: null,
       viewingOpen: false,
+      paid: false,
       toolLog: [],
       status: 'idle',
     });
@@ -242,6 +246,7 @@ export const useStore = create<State>((set, get) => ({
   setViewing: (v) => set({ viewing: v }),
   openViewing: () => set({ viewingOpen: true }),
   closeViewing: () => set({ viewingOpen: false }),
+  setPaid: () => set({ paid: true }),
 
   openGate: () => set({ gateOpen: true }),
 
@@ -444,6 +449,7 @@ export const useStore = create<State>((set, get) => ({
       lastAvailabilityCheck: null,
       viewing: null,
       viewingOpen: false,
+      paid: false,
       toolLog: [],
       status: 'idle',
     });

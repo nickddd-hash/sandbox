@@ -19,6 +19,7 @@ export function CrmBoard() {
   const score = useStore((s) => s.score);
   const sms = useStore((s) => s.sms);
   const channel = useStore((s) => s.channel);
+  const paid = useStore((s) => s.paid);
   const openViewing = useStore((s) => s.openViewing);
   const transferReason = useStore((s) => s.transferReason);
 
@@ -34,9 +35,12 @@ export function CrmBoard() {
             CRM · Сделки
             <span className="card-tag">демо-витрина</span>
           </div>
-          {score != null && (
-            <span className={`lead-pill ${scoreClass(score)}`}>{scoreLabel(score)}</span>
-          )}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {paid && <span className="lead-pill lead-pill--paid">💳 Оплачено</span>}
+            {score != null && (
+              <span className={`lead-pill ${scoreClass(score)}`}>{scoreLabel(score)}</span>
+            )}
+          </div>
         </header>
 
         <div className="crm-card-inner">

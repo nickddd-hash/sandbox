@@ -134,6 +134,7 @@
 .lead-pill--hot { color: var(--hot); background: var(--hot-bg); }
 .lead-pill--warm { color: var(--warm); background: var(--warm-bg); }
 .lead-pill--cold { color: var(--cold); background: var(--cold-bg); }
+.lead-pill--paid { color: var(--green); background: var(--green-tint); }
 .crm-card-inner { padding: 16px var(--pad) var(--pad); }
 .crm-title-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px; }
 .crm-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -.01em; color: var(--text); }
