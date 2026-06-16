@@ -392,10 +392,16 @@ export const useStore = create<State>((set, get) => ({
           at: now,
         };
         set((s) => {
-          // Защита от дублей повторного вызова tool по одной позиции
-          // (модель может переслать ту же позицию с другим регистром/пробелами).
           const norm = (n: string) => n.trim().toLowerCase();
-          if (s.order.some((x) => norm(x.name) === norm(item.name))) return {};
+          // Повторный вызов той же позиции = ОБНОВЛЕНИЕ количества/цены, а не дубль.
+          // Модель иногда добавляет qty:1 заранее, а реальное количество шлёт ответом —
+          // тогда вторая строка не плодится, а уточняет первую.
+          const idx = s.order.findIndex((x) => norm(x.name) === norm(item.name));
+          if (idx >= 0) {
+            const order = s.order.slice();
+            order[idx] = { ...order[idx], qty: item.qty, price: item.price || order[idx].price };
+            return { order };
+          }
           let order = s.order;
           // Цветы: один цвет на тип цветка — добавление другого цвета того же цветка
           // ЗАМЕНЯЕТ прежний (модель иногда сама выбирает цвет, потом меняет на нужный).
