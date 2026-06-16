@@ -60,7 +60,7 @@ export function NaryadPanel() {
     const deliveryTime = f('deliveryTime') || f('date') || placed?.deliveryTime || '';
 
     return (
-      <section className="card naryad">
+      <section className="card naryad" data-tour="nariad">
         {header}
         {!hasData ? (
           <Empty text="Наряд сформируется, как только заказ будет оформлен." />
@@ -114,7 +114,7 @@ export function NaryadPanel() {
         ? `${f('dateFrom')} — ${f('dateTo')}`
         : '';
     return (
-      <section className="card naryad">
+      <section className="card naryad" data-tour="nariad">
         {header}
         {!hasData ? (
           <Empty text="Наряд сформируется после брони автомобиля." />
@@ -141,7 +141,7 @@ export function NaryadPanel() {
   const hasData = !!datetime || !!service || !!assignee;
 
   return (
-    <section className="card naryad">
+    <section className="card naryad" data-tour="nariad">
       {header}
       {!hasData ? (
         <Empty text="Наряд сформируется после записи." />

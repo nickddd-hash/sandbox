@@ -12,9 +12,7 @@ import { RoiPanel } from './components/RoiPanel';
 import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
 import { ViewingModal } from './components/ViewingModal';
-import { OnboardingOverlay } from './components/OnboardingOverlay';
-
-const ONBOARD_KEY = 'sandbox_onboarded_v1';
+import { TourOverlay } from './components/TourOverlay';
 
 const HOOD_ITEMS: [string, string][] = [
   ['Речь → текст → речь', 'Распознавание и синтез голоса в реальном времени, без задержек.'],
@@ -57,19 +55,14 @@ export default function App() {
   const crmView = useStore((s) => s.niche.crmView);
   const nicheDisclaimer = useStore((s) => s.niche.disclaimer);
   const [hoodOpen, setHoodOpen] = useState(false);
-  const [onboardOpen, setOnboardOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     const isPresenter = new URLSearchParams(window.location.search).has('presenter');
-    if (!isPresenter && !localStorage.getItem(ONBOARD_KEY)) {
-      setOnboardOpen(true);
-    }
+    if (!isPresenter) setTourOpen(true);
   }, []);
 
-  const closeOnboard = () => {
-    localStorage.setItem(ONBOARD_KEY, '1');
-    setOnboardOpen(false);
-  };
+  const closeTour = () => setTourOpen(false);
 
   return (
     <div className="app" data-theme="trust">
@@ -86,13 +79,10 @@ export default function App() {
             <div className="brand-sub">ИИ-консультант · демо-песочница</div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="help-btn" onClick={() => setOnboardOpen(true)} title="Как пользоваться">?</button>
-          <button className="hood-btn" onClick={() => setHoodOpen(true)}>под капотом</button>
-        </div>
+        <button className="hood-btn" onClick={() => setHoodOpen(true)}>под капотом</button>
       </header>
 
-      <div className="niche-wrap">
+      <div className="niche-wrap" data-tour="niche">
         <NicheSwitcher />
       </div>
 
@@ -132,7 +122,7 @@ export default function App() {
       </main>
 
       {(crmView === 'rental' || crmView === 'calendar') && (
-        <div className="board-wrap">
+        <div className="board-wrap" data-tour="board">
           {crmView === 'rental' ? <RentalBoard /> : <Calendar />}
           <div style={{ marginTop: 'var(--gap)' }}>
             <NaryadPanel />
@@ -163,7 +153,8 @@ export default function App() {
         </div>
       </footer>
 
-      <OnboardingOverlay open={onboardOpen} onClose={closeOnboard} />
+      <TourOverlay open={tourOpen} onClose={closeTour} />
+      <button className="tour-fab" onClick={() => setTourOpen(true)} title="Как пользоваться">?</button>
       <IncomingCallOverlay onAccept={() => void launch('voice')} />
       <ViewingModal />
       <BehindTheScenes />
