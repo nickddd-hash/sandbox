@@ -109,7 +109,7 @@ App рендерит: `rental` → RentalBoard · `order` → OrderBoard · `cal
 
 ## Текстовый чат — через Hubris (НЕ Dasha)
 - Чат идёт `backend/src/routes/chat.ts` → прокси `api.hubris.pw` (OpenAI-совместимый, ключ `HUBRIS_API_KEY`, модель `HUBRIS_MODEL` в .env). Параметризован по нише (lendauto / meat).
-- Модель чата — **`google/gemini-2.5-flash`** (на проде грузится `/root/sandbox/.env` без `HUBRIS_MODEL` → дефолт кода; полный flash function-calling тянет, flash-LITE — нет). Задаётся `HUBRIS_MODEL` в .env. Голос — отдельно, через Dasha-агента (lendauto, `gemini-2.5-flash-lite`).
+- Модель чата — **`google/gemini-3.1-flash-lite`** (задана `HUBRIS_MODEL` в прод `/root/sandbox/.env` и локальном `.env`). Переключили с `gemini-2.5-flash` 2026-06-16: тот на Hubris деградировал до 10–30 с/вызов (чат сильно лагал «через сообщение»); 3.1-flash-lite стабильно ~1.2–1.7 с и надёжно вызывает tools. Дефолт кода в config.ts остаётся `gemini-2.5-flash` — на проде переопределяется .env. Голос — отдельно (Dasha-агенты на `gemini-3.1-flash-lite`).
 
 ## Статус (2026-06-10)
 ✅ Прод живой на https://sandbox.flowsmart.ru (браузер: голос+чат+CRM+order/rental/calendar, end-to-end).
