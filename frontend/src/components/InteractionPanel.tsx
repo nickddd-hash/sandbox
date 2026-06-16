@@ -91,6 +91,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<number | null>(null);
   const pendingPayRef = useRef<string | null>(null);
+  const paidLinkRef = useRef(false); // ссылка на оплату уже создана для текущего заказа
 
   const stopPoll = () => {
     if (pollRef.current) {
@@ -238,11 +239,16 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
 
   const createRealPayment = async () => {
     const st = useStore.getState();
+    // Не создаём оплату преждевременно или повторно: нужны имя И телефон,
+    // и только ОДНА ссылка на заказ (модель иногда зовёт place_order рано/дважды).
+    if (!st.card.name?.value || !st.card.phone?.value) return;
+    if (paidLinkRef.current) return;
     const { grandTotal } = orderTotals(st.order, st.niche.id);
     if (!(grandTotal > 0)) return;
+    paidLinkRef.current = true;
     try {
       const { url, id } = await createPayment(grandTotal, `Оплата заказа — ${st.niche.label}`);
-      if (!url) return;
+      if (!url) { paidLinkRef.current = false; return; }
       // Ссылка в чат (кликабельная) + в баннер CRM.
       addMessage({ from: 'agent', text: `💳 Оплатить заказ на ${grandTotal.toLocaleString('ru-RU')} ₽: ${url}` }, true);
       st.applyTool({
@@ -252,6 +258,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       } as ToolEvent);
       if (id) pollPayment(id); // ждём оплату → сообщение «оплачено»
     } catch {
+      paidLinkRef.current = false; // при сбое разрешим повтор
       /* демо: при сбое платежа оставляем ссылку, которую дал бот */
     }
   };
@@ -261,6 +268,7 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     setLoading(true);
     historyRef.current = [];
     stopPoll();
+    paidLinkRef.current = false;
     // Новый чат — чистая карточка и корзина (иначе позиции прошлых диалогов суммируются).
     const st = useStore.getState();
     st.resetConversation();
