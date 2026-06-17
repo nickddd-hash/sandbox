@@ -9,7 +9,7 @@ export function InvoiceFlow() {
   const history = useStore((s) => s.orderHistory);
   const niche   = useStore((s) => s.niche);
 
-  const isInvoice = !!payment && /счёт|счет/i.test(payment);
+  const isInvoice = !!payment && /счёт|счет|безнал/i.test(payment);
 
   const [phase, setPhase]       = useState<'idle' | 'processing' | 'ready'>('idle');
   const [fileName, setFileName] = useState('');
