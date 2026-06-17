@@ -199,8 +199,15 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
     // Ссылка должна оказаться в самом чате (мы в текстовом канале).
     const niche = useStore.getState().niche;
     if (toolCalls.some((t) => t.name === 'place_order') && niche.crmView === 'order') {
-      // ЮKassa: реальная ссылка на оплату под сумму корзины (источник истины UI).
-      void createRealPayment();
+      const pay = (useStore.getState().card.payment?.value || '').toLowerCase();
+      const isBeznal = /безнал|сч[её]т/.test(pay);
+      if (isBeznal) {
+        // Безнал: счёт прямо в чате
+        setTimeout(showInvoiceInChat, 400);
+      } else {
+        // ЮKassa: реальная ссылка на оплату под сумму корзины.
+        void createRealPayment();
+      }
     } else if (niche.id === 'realty' && toolCalls.some((t) => t.name === 'book_appointment')) {
       // Недвижимость: ссылка открывает демо-страницу осмотра (карточка объекта + детали).
       const st = useStore.getState();
@@ -236,6 +243,67 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
       s += `${s ? '. ' : ''}Заказ: ${items}. Итого ${grandTotal.toLocaleString('ru-RU')} ₽`;
     }
     return s || 'Лид собран в ходе диалога.';
+  };
+
+  const showInvoiceInChat = () => {
+    const st = useStore.getState();
+    const invoiceNum = String(Math.floor(1000 + Math.random() * 9000));
+    const today = new Date().toLocaleDateString('ru-RU');
+    const company = st.card.company?.value || st.card.name?.value || 'Клиент';
+    const placed = st.orderHistory[st.orderHistory.length - 1];
+    const items = st.order.length > 0 ? st.order : (placed?.items ?? []);
+    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const fmt2 = (n: number) => n.toLocaleString('ru-RU') + ' ₽';
+    const rows = items
+      .map(
+        (i) =>
+          `<tr><td>${i.name}</td>` +
+          `<td style="text-align:center">${i.qty} ${(i as { unit?: string }).unit || 'шт'}</td>` +
+          `<td style="text-align:right">${fmt2(i.price)}</td>` +
+          `<td style="text-align:right;font-weight:600">${fmt2(i.price * i.qty)}</td></tr>`,
+      )
+      .join('');
+    const html = `<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><title>Счёт №${invoiceNum}</title>
+<style>
+  body{font-family:Arial,sans-serif;max-width:780px;margin:48px auto;color:#1a1a1a;font-size:14px}
+  h2{margin:0 0 4px;font-size:20px}.sub{color:#666;margin:0 0 28px;font-size:13px}
+  .parties{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:24px}
+  .party-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#999;margin-bottom:4px}
+  .party-val{font-weight:600}.party-meta{font-size:12px;color:#666;margin-top:2px}
+  table{width:100%;border-collapse:collapse;margin:0 0 20px}
+  th,td{border:1px solid #e0e0e0;padding:9px 12px}
+  th{background:#f6f7f9;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#555}
+  .foot-row td{background:#eef2ff;font-weight:700}
+  .stamp{color:#4f46e5;font-size:12px;margin-top:28px;padding-top:12px;border-top:1px solid #e0e0e0}
+</style></head><body>
+<h2>Счёт на оплату № ${invoiceNum}</h2>
+<p class="sub">Дата: ${today}</p>
+<div class="parties">
+  <div><div class="party-label">Поставщик</div>
+  <div class="party-val">${st.niche.label}</div>
+  <div class="party-meta">ИНН 7700000000 · КПП 770001001<br>р/с 40702810000000000001 в Банке</div></div>
+  <div><div class="party-label">Покупатель</div>
+  <div class="party-val">${company}</div></div>
+</div>
+<table>
+  <thead><tr><th>Наименование</th><th>Кол-во</th><th>Цена</th><th>Сумма</th></tr></thead>
+  <tbody>${rows}</tbody>
+  <tfoot><tr class="foot-row">
+    <td colspan="3">ИТОГО к оплате (без НДС)</td>
+    <td style="text-align:right">${fmt2(total)}</td>
+  </tr></tfoot>
+</table>
+<div class="stamp">✅ Документ сформирован автоматически · ${new Date().toLocaleString('ru-RU')}</div>
+</body></html>`;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    addMessage({
+      from: 'agent',
+      text: `📄 Счёт № ${invoiceNum} от ${today} — скачайте для оплаты:`,
+      downloadUrl: url,
+      downloadName: `Счёт_${invoiceNum}_${today.replace(/\./g, '-')}.html`,
+    }, true);
   };
 
   const createRealPayment = async () => {
@@ -394,6 +462,15 @@ export function InteractionPanel({ onLaunch, onStop }: Props) {
               >
                 <div className={'bubble' + (m.from === 'agent' ? ' bubble--ai' : ' bubble--client')}>
                   {linkify(m.text)}
+                  {m.downloadUrl && (
+                    <a
+                      href={m.downloadUrl}
+                      download={m.downloadName || 'счёт.html'}
+                      className="bubble-dl-btn"
+                    >
+                      ⬇ Скачать счёт
+                    </a>
+                  )}
                 </div>
               </div>
             ))}

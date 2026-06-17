@@ -240,6 +240,13 @@
 .bubble--client { background: var(--accent); color: #fff; border-top-right-radius: 5px; }
 .bubble-link { color: var(--accent); font-weight: 600; text-decoration: underline; word-break: break-all; }
 .bubble--client .bubble-link { color: #fff; }
+.bubble-dl-btn {
+  display: block; margin-top: 10px; padding: 8px 14px;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 600;
+  border-radius: 8px; text-decoration: none; text-align: center;
+  transition: opacity .18s;
+}
+.bubble-dl-btn:hover { opacity: .85; color: #fff; }
 @keyframes lineIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
 
 .typing { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }

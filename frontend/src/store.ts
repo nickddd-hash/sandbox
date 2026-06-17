@@ -9,6 +9,8 @@ export interface ChatMessage {
   id: string;
   from: 'agent' | 'user';
   text: string;
+  downloadUrl?: string;
+  downloadName?: string;
 }
 
 export interface CardField {

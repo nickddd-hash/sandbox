@@ -13,7 +13,6 @@ import { IncomingCallOverlay } from './components/IncomingCallOverlay';
 import { BehindTheScenes } from './components/BehindTheScenes';
 import { ViewingModal } from './components/ViewingModal';
 import { TourOverlay } from './components/TourOverlay';
-import { InvoiceFlow } from './components/InvoiceFlow';
 
 const HOOD_ITEMS: [string, string][] = [
   ['Речь → текст → речь', 'Распознавание и синтез голоса в реальном времени, без задержек.'],
@@ -109,9 +108,6 @@ export default function App() {
             <>
               <div style={{ marginTop: 'var(--gap)' }} data-tour="board">
                 <OrderBoard />
-              </div>
-              <div style={{ marginTop: 'var(--gap)' }}>
-                <InvoiceFlow />
               </div>
               <div style={{ marginTop: 'var(--gap)' }}>
                 <NaryadPanel />
